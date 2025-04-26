@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Next Frame Extension</title>
+  <style>
+    body {
+      width: 300px;
+      padding: 10px;
+      font-family: Arial, sans-serif;
+    }
+    button {
+      width: 100%;
+      padding: 8px;
+      margin-top: 10px;
+      background-color: #4285f4;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #3367d6;
+    }
+    .status {
+      margin-top: 10px;
+      padding: 8px;
+      border-radius: 4px;
+      text-align: center;
+      display: none;
+    }
+    .active {
+      background-color: #d6f5d6;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <h2>Next Frame Extension</h2>
+  <p>Click the button below to enable frame latency measurement on the current page.</p>
+  <button id="activate">Enable Frame Measurement</button>
+  <div id="status" class="status">Measurement activated!</div>
+  <script src="popup.js"></script>
+</body>
+</html>

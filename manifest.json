@@ -1,0 +1,14 @@
+{
+  "manifest_version": 3,
+  "name": "Next Frame Extension",
+  "version": "1.0",
+  "description": "Measure how many frames it takes for a screen to update after mouse events",
+  "action": {
+    "default_popup": "popup/popup.html"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": ["activeTab", "scripting"],
+  "content_scripts": []
+}
