@@ -1,14 +1,20 @@
 {
   "manifest_version": 3,
-  "name": "Next Frame Extension",
+  "name": "Next Frame Measurement",
+  "description": "Measures how many frames it takes for a screen to update after pointer events",
   "version": "1.0",
-  "description": "Measure how many frames it takes for a screen to update after mouse events",
+  "permissions": ["activeTab", "scripting"],
   "action": {
-    "default_popup": "popup/popup.html"
+    "default_title": "Next Frame Extension"
   },
   "background": {
     "service_worker": "background.js"
   },
-  "permissions": ["activeTab", "scripting"],
-  "content_scripts": []
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
 }
