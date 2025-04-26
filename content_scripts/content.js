@@ -73,42 +73,6 @@
                 throw error;
             }
         }
-
-        // static async batchSaveInteractions(interactions) {
-        //     try {
-        //         const storageKey = this.getStorageKey();
-
-        //         return new Promise((resolve, reject) => {
-        //             chrome.storage.local.get([storageKey], (result) => {
-        //                 const existingData = result[storageKey] || [];
-        //                 const updatedData = [...existingData, ...interactions];
-
-        //                 chrome.storage.local.set({ [storageKey]: updatedData }, () => {
-        //                     console.log(`${interactions.length} interactions saved to storage`);
-        //                     resolve();
-        //                 });
-        //             });
-        //         });
-        //     } catch (error) {
-        //         console.error("Error batch saving interactions:", error);
-        //         throw error;
-        //     }
-        // }
-
-        static async getAllInteractions() {
-            try {
-                const storageKey = this.getStorageKey();
-
-                return new Promise((resolve) => {
-                    chrome.storage.local.get([storageKey], (result) => {
-                        resolve(result[storageKey] || []);
-                    });
-                });
-            } catch (error) {
-                console.error("Error getting interactions:", error);
-                return [];
-            }
-        }
     }
 
     /**
@@ -199,99 +163,18 @@
     }
 
     /**
-     * MutationObserver Manager - Handles creating and managing DOM observers
-     */
-    class ObserverManager {
-        constructor() {
-            this.observers = {};
-        }
-
-        reset(key) {
-            console.log("Resetting observers", key);
-            if (key) {
-                // Clean a specific event
-                if (this.observers[key]) {
-                    this.observers[key].disconnect();
-                    delete this.observers[key];
-                }
-            } else {
-                // Clean all
-                for (const key in this.observers) {
-                    if (this.observers[key]) {
-                        this.observers[key].disconnect();
-                        delete this.observers[key];
-                    }
-                }
-                this.observers = {};
-            }
-        }
-
-        observeDOMChanges(key, onUpdate, isActive) {
-            // Disconnect any existing observer for this key
-            if (this.observers[key]) {
-                this.observers[key].disconnect();
-                delete this.observers[key];
-            }
-
-            const startTime = performance.now();
-
-            const observer = new MutationObserver((mutations) => {
-                if (!isActive()) {
-                    observer.disconnect();
-                    return;
-                }
-
-                const endTime = performance.now();
-                const duration = endTime - startTime;
-                console.log("DOM update duration:", duration, "ms. for event:", key);
-
-                // Call the update callback with the duration
-                onUpdate(duration, key);
-
-                this.reset(key);
-            });
-
-            this.observers[key] = observer;
-
-            observer.observe(document, {
-                childList: true,
-                subtree: true,
-                attributes: true,
-                characterData: true,
-            });
-        }
-    }
-
-    /**
      * Main DOMPaintTracker class - Coordinates the other components
      */
     class DOMPaintTracker {
         constructor() {
             this.active = false;
             this.recording = false;
-            this.currentPage = this.getCurrentPageInfo();
-            this.currentInteraction = null; // Current interaction being tracked
+            this.currentInteraction = null;
+            this.observers = {};
 
-            // Initialize component modules
-            this.observerManager = new ObserverManager();
-
-            // Define event handlers with arrow functions to preserve 'this' context
-            this.handlePointerDown = (event) => {
-                if (!this.active) return;
-                this.observerManager.reset();
-
-                if (this.recording) {
-                    this.startInteraction(event);
-                }
-
-                this.calculateUpdate(event.type);
-            };
-
-            this.handlePointerUp = (event) => {
-                if (!this.active) return;
-                // We don't create a new interaction for pointerup, just calculate the update
-                this.calculateUpdate(event.type);
-            };
+            // Bind the event handlers to preserve context
+            this.handlePointerDown = this.handlePointerDown.bind(this);
+            this.handlePointerUp = this.handlePointerUp.bind(this);
         }
 
         getCurrentPageInfo() {
@@ -302,14 +185,85 @@
             };
         }
 
-        /**
-         * Start tracking a new interaction
-         */
-        startInteraction(event) {
-            // Update current page info before creating interaction
-            this.currentPage = this.getCurrentPageInfo();
-            this.currentInteraction = new InteractionEvent(event.target, this.currentPage);
-            console.log(`New interaction started: ${this.currentInteraction.id}`);
+        resetObservers(key) {
+            // console.log("Resetting observers", key);
+            if (key) {
+                // Clean a specific observer
+                if (this.observers[key]) {
+                    this.observers[key].disconnect();
+                    delete this.observers[key];
+                }
+            } else {
+                // Clean all observers
+                Object.values(this.observers).forEach((observer) => observer.disconnect());
+                this.observers = {};
+            }
+        }
+
+        observeDOMChanges(key, onUpdate) {
+            this.resetObservers(key);
+
+            const startTime = performance.now();
+            const observer = new MutationObserver((mutations) => {
+                if (!this.active) {
+                    observer.disconnect();
+                    return;
+                }
+
+                const duration = performance.now() - startTime;
+                console.log("DOM update duration:", duration, "ms. for event:", key);
+
+                // Call the update callback with the duration
+                onUpdate(duration, key);
+                this.resetObservers(key);
+            });
+
+            this.observers[key] = observer;
+            observer.observe(document, {
+                childList: true,
+                subtree: true,
+                attributes: true,
+                characterData: true,
+            });
+        }
+
+        calculateUpdate(eventType) {
+            if (!this.active) return;
+            console.log("Calculating update for event:", eventType);
+
+            this.observeDOMChanges(eventType, (duration, eventType) => {
+                if (this.recording && this.currentInteraction) {
+                    // Update interaction with the timing information
+                    this.currentInteraction.updateDelay(eventType, duration);
+
+                    // Check if navigation occurred
+                    const currentPageInfo = this.getCurrentPageInfo();
+                    const navigationOccurred = this.currentInteraction.checkForNavigation(currentPageInfo);
+
+                    // If navigation occurred or the interaction is complete, clear the current interaction
+                    if (navigationOccurred || this.currentInteraction.complete) {
+                        this.currentInteraction = null;
+                    }
+                }
+            });
+        }
+
+        handlePointerDown(event) {
+            if (!this.active) return;
+
+            this.resetObservers();
+
+            if (this.recording) {
+                this.currentInteraction = new InteractionEvent(event.target, this.getCurrentPageInfo());
+                console.log(`New interaction started: ${this.currentInteraction.id}`);
+            }
+
+            this.calculateUpdate(event.type);
+        }
+
+        handlePointerUp(event) {
+            if (!this.active) return;
+            this.calculateUpdate(event.type);
         }
 
         activate() {
@@ -328,7 +282,7 @@
             document.removeEventListener("pointerup", this.handlePointerUp, true);
             this.active = false;
             this.stopRecording();
-            this.observerManager.reset();
+            this.resetObservers();
             console.log("Tracker event listeners deactivated");
         }
 
@@ -336,7 +290,6 @@
             if (!this.active || this.recording) return false;
 
             this.recording = true;
-            this.currentPage = this.getCurrentPageInfo();
             console.log("Started recording interactions");
             return true;
         }
@@ -358,38 +311,6 @@
 
         isRecording() {
             return this.recording;
-        }
-
-        calculateUpdate(eventType) {
-            if (!this.active) return;
-            console.log("Calculating update for event:", eventType);
-
-            this.observerManager.observeDOMChanges(
-                eventType,
-                (duration, eventType) => {
-                    if (this.recording && this.currentInteraction) {
-                        // Update interaction with the timing information
-                        this.currentInteraction.updateDelay(eventType, duration);
-
-                        // Check if navigation occurred
-                        const currentPageInfo = this.getCurrentPageInfo();
-                        const navigationOccurred = this.currentInteraction.checkForNavigation(currentPageInfo);
-
-                        // If navigation occurred or the interaction is complete, clear the current interaction
-                        if (navigationOccurred || this.currentInteraction.complete) {
-                            // Update current page info
-                            this.currentPage = currentPageInfo;
-                            // Clear current interaction since it's complete
-                            this.currentInteraction = null;
-                        }
-                    }
-                },
-                () => this.active
-            );
-        }
-
-        cleanup() {
-            this.deactivate();
         }
     }
 

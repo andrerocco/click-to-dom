@@ -1,5 +1,3 @@
-// Popup script to handle UI interactions
-
 document.addEventListener("DOMContentLoaded", async () => {
     const enableSwitch = document.getElementById("enableExtension");
     const recordSwitch = document.getElementById("recordInteractions");
