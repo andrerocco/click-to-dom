@@ -1,20 +1,21 @@
 {
-  "manifest_version": 3,
-  "name": "Next Frame Measurement",
-  "description": "Measures how many frames it takes for a screen to update after pointer events",
-  "version": "1.0",
-  "permissions": ["activeTab", "scripting"],
-  "action": {
-    "default_title": "Next Frame Extension"
-  },
-  "background": {
-    "service_worker": "background.js"
-  },
-  "content_scripts": [
-    {
-      "matches": ["<all_urls>"],
-      "js": ["content.js"],
-      "run_at": "document_idle"
-    }
-  ]
+    "manifest_version": 3,
+    "name": "Next Frame Measurement",
+    "description": "Measures how many frames it takes for a screen to update after pointer events",
+    "version": "1.0",
+    "permissions": ["activeTab", "scripting", "storage"],
+    "action": {
+        "default_title": "Next Frame Extension",
+        "default_popup": "popup.html"
+    },
+    "background": {
+        "service_worker": "background.js"
+    },
+    "content_scripts": [
+        {
+            "matches": ["<all_urls>"],
+            "js": ["content.js"],
+            "run_at": "document_idle"
+        }
+    ]
 }
