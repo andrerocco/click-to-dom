@@ -80,8 +80,9 @@
 }
 
 .next-frame-fps-value {
+  display: flex;
+  justify-content: flex-end;
+  text-align: right;
   color: #2196f3;
   font-size: 11px;
-  margin-left: 10px;
-  padding-left: 10px;
 }

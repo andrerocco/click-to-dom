@@ -56,6 +56,10 @@
                 startLeft: 0,
                 startTop: 0,
             };
+            this.loadingState = {
+                pointerdown: false,
+                pointerup: false,
+            };
 
             this.stats = {
                 pointerdown: null,
@@ -132,6 +136,9 @@
         updateStats(eventType, duration) {
             if (!this.element || typeof duration !== "number") return;
 
+            // Stop loading state for the event type
+            this.loadingState[eventType] = false;
+
             // Update our internal stats
             this.stats[eventType] = duration;
 
@@ -164,23 +171,34 @@
                 const fpsElement = this.element.querySelector(`#next-frame-${type}-fps`);
 
                 if (valueElement && fpsElement) {
-                    // Update milliseconds
-                    valueElement.textContent = value ? `${Math.round(value)}ms` : "-";
-
-                    if (value) {
-                        // Calculate frames at different refresh rates
-                        const frames60fps = Math.ceil(value / (1000 / 60));
-                        const frames120fps = Math.ceil(value / (1000 / 120));
-
-                        fpsElement.innerHTML = `
-                            ${frames60fps}f @ 60fps<br>
-                            ${frames120fps}f @ 120fps
-                        `;
-                    } else {
+                    if (this.loadingState[type]) {
+                        // Show loading state
+                        valueElement.textContent = "-";
                         fpsElement.innerHTML = "";
+                    } else {
+                        // Update milliseconds
+                        valueElement.textContent = value ? `${Math.round(value)}ms` : "-";
+
+                        if (value) {
+                            // Calculate frames at different refresh rates
+                            const frames60fps = Math.ceil(value / (1000 / 60));
+                            const frames120fps = Math.ceil(value / (1000 / 120));
+
+                            fpsElement.innerHTML = `
+                                ${frames60fps}f @ 60fps<br>
+                                ${frames120fps}f @ 120fps
+                            `;
+                        } else {
+                            fpsElement.innerHTML = "";
+                        }
                     }
                 }
             });
+        }
+
+        setLoadingState(eventType, isLoading) {
+            this.loadingState[eventType] = isLoading;
+            this.render();
         }
 
         show() {
@@ -353,6 +371,7 @@
             this.recording = false;
             this.currentInteraction = null;
             this.observers = {};
+            this.timeouts = {}; // Add timeouts tracking object
 
             // Bind the event handlers to preserve context
             this.handlePointerDown = this.handlePointerDown.bind(this);
@@ -385,6 +404,20 @@
             }
         }
 
+        clearTimeouts(key) {
+            if (key) {
+                // Clear a specific timeout
+                if (this.timeouts[key]) {
+                    clearTimeout(this.timeouts[key]);
+                    delete this.timeouts[key];
+                }
+            } else {
+                // Clear all timeouts
+                Object.values(this.timeouts).forEach((timeoutId) => clearTimeout(timeoutId));
+                this.timeouts = {};
+            }
+        }
+
         isExtensionUINode(node) {
             let current = node;
             if (current.nodeType === Node.ELEMENT_NODE && current.hasAttribute("data-extension-ui")) {
@@ -412,29 +445,21 @@
 
         calculateUpdate(eventType) {
             if (!this.active) return;
-            console.log("Calculating update for event:", eventType);
 
-            // Clean up any existing observer for this event type
-            this.resetObservers(eventType);
+            this.statisticsOverlayUI.setLoadingState(eventType, true); // Set loading state to true
+            this.resetObservers(eventType); // Clean up any existing observer for this event type
+            this.clearTimeouts(eventType); // Clear any existing timeout for this event type
 
             // Start timing and create a new mutation observer
             const startTime = performance.now();
             const observer = new MutationObserver((mutations) => {
-                // TODO: Stop if mutation comes from extension UI
                 if (!this.active) {
                     observer.disconnect();
                     return;
                 }
-                if (mutations.some((mutation) => this.isExtensionUIMutation(mutation))) {
-                    console.log(">>> Mutation " + mutations[0].nextSibling + " is within extension UI, ignoring");
-                    observer.disconnect();
-                    return;
-                }
+                if (mutations.every((mutation) => this.isExtensionUIMutation(mutation))) return;
 
                 const duration = performance.now() - startTime;
-                console.log(`DOM update for ${eventType}: ${duration}ms`);
-
-                // Update the statistics overlay with the timing info
                 this.statisticsOverlayUI.updateStats(eventType, duration);
 
                 if (this.recording && this.currentInteraction) {
@@ -454,10 +479,37 @@
                 // Disconnect this observer once we've captured the timing
                 observer.disconnect();
                 delete this.observers[eventType];
+
+                // Clear the safety timeout since we got a valid measurement
+                this.clearTimeouts(eventType);
+
+                // EDGE CASE: For sites that navigate on pointerdown, all mutations may happend
+                // before pointerup. In this case, we need to set a timeout to clean up the
+                // pending pointerup observer.
+                if (eventType === "pointerdown" && this.active && !this.observers["pointerup"]) {
+                    // Set a safety timeout to cancel any pending pointerup observation
+                    // if no pointerup event happens within a reasonable time (e.g., 5 seconds)
+                    this.timeouts["pointerup"] = setTimeout(() => {
+                        console.log("Safety timeout: cleaning up pending pointerup observer");
+                        if (this.observers["pointerup"]) {
+                            this.resetObservers("pointerup");
+                            this.statisticsOverlayUI.setLoadingState("pointerup", false);
+                        }
+                    }, 2000); // 2 seconds should be enough time for a normal pointerup to occur
+                }
             });
 
             // Store the observer for later cleanup if needed
             this.observers[eventType] = observer;
+
+            // Set a safety timeout to cancel this observation if no mutation occurs
+            this.timeouts[eventType] = setTimeout(() => {
+                console.log(`Safety timeout: no mutations detected for ${eventType} after 5 seconds`);
+                if (this.observers[eventType]) {
+                    this.resetObservers(eventType);
+                    this.statisticsOverlayUI.setLoadingState(eventType, false);
+                }
+            }, 5000); // 5 seconds timeout
 
             // Start observing all DOM changes
             observer.observe(document, {
@@ -484,6 +536,7 @@
             if (this.isExtensionUIEvent(event)) return;
 
             this.resetObservers();
+            this.clearTimeouts();
             this.pointerIndicatorUI.showPointerDown(event.clientX, event.clientY);
 
             if (this.recording) {
@@ -491,6 +544,8 @@
                 console.log(`New interaction started: ${this.currentInteraction.id}`);
             }
 
+            // Set loading state and calculate update
+            this.statisticsOverlayUI.setLoadingState("pointerdown", true);
             this.calculateUpdate(event.type);
         }
 
@@ -498,7 +553,13 @@
             if (!this.active) return;
             if (this.isExtensionUIEvent(event)) return;
 
+            // Clear any existing pointerup timeout
+            this.clearTimeouts("pointerup");
+
             this.pointerIndicatorUI.switchToPointerUp(event.clientX, event.clientY);
+
+            // Set loading state and calculate update
+            this.statisticsOverlayUI.setLoadingState("pointerup", true);
             this.calculateUpdate(event.type);
         }
 
@@ -520,8 +581,9 @@
             this.active = false;
             this.stopRecording();
             this.resetObservers();
+            this.clearTimeouts();
             this.statisticsOverlayUI.hide();
-            this.pointerIndicatorUI.removeCurrentIndicator(); // Updated call
+            this.pointerIndicatorUI.removeCurrentIndicator();
             console.log("Tracker event listeners deactivated");
         }
 
