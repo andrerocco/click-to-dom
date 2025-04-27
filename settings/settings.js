@@ -4,7 +4,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const showLastContentPaintToggle = document.getElementById("showLastContentPaint");
     const timeAfterLastContentPaintInput = document.getElementById("timeAfterLastContentPaint");
     const saveButton = document.getElementById("saveButton");
-    const statusElement = document.getElementById("status");
+    const saveStatus = document.getElementById("status");
 
     // Color picker elements
     const pointerDownColorInput = document.getElementById("pointerDownColor");
@@ -15,9 +15,6 @@ document.addEventListener("DOMContentLoaded", () => {
     // Default colors
     const DEFAULT_POINTER_DOWN_COLOR = "#FF0000"; // Red
     const DEFAULT_POINTER_UP_COLOR = "#FFFF00"; // Yellow
-
-    // Hide status message initially
-    statusElement.style.display = "none";
 
     // Load current settings
     chrome.storage.sync.get(
@@ -90,13 +87,12 @@ document.addEventListener("DOMContentLoaded", () => {
             },
             () => {
                 // Show success message
-                statusElement.textContent = "Settings saved successfully!";
-                statusElement.style.display = "block";
+                saveStatus.classList.add("visible");
 
                 // Hide message after 2 seconds
                 setTimeout(() => {
-                    statusElement.style.display = "none";
-                }, 2000);
+                    saveStatus.classList.remove("visible");
+                }, 5000);
 
                 // Notify content scripts about the setting changes
                 chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
