@@ -6,23 +6,55 @@ document.addEventListener("DOMContentLoaded", () => {
     const saveButton = document.getElementById("saveButton");
     const statusElement = document.getElementById("status");
 
+    // Color picker elements
+    const pointerDownColorInput = document.getElementById("pointerDownColor");
+    const pointerUpColorInput = document.getElementById("pointerUpColor");
+    const resetPointerDownColorButton = document.getElementById("resetPointerDownColor");
+    const resetPointerUpColorButton = document.getElementById("resetPointerUpColor");
+
+    // Default colors
+    const DEFAULT_POINTER_DOWN_COLOR = "#FF0000"; // Red
+    const DEFAULT_POINTER_UP_COLOR = "#FFFF00"; // Yellow
+
     // Hide status message initially
     statusElement.style.display = "none";
 
     // Load current settings
-    chrome.storage.sync.get(["fpsComparisonValue", "showLastContentPaint", "timeAfterLastContentPaint"], (result) => {
-        // Set default values if settings don't exist yet
-        fpsComparisonValueInput.value = result.fpsComparisonValue || 60;
-        showLastContentPaintToggle.checked = result.showLastContentPaint || false;
-        timeAfterLastContentPaintInput.value = result.timeAfterLastContentPaint || 100;
+    chrome.storage.sync.get(
+        [
+            "fpsComparisonValue",
+            "showLastContentPaint",
+            "timeAfterLastContentPaint",
+            "pointerDownColor",
+            "pointerUpColor",
+        ],
+        (result) => {
+            // Set default values if settings don't exist yet
+            fpsComparisonValueInput.value = result.fpsComparisonValue || 60;
+            showLastContentPaintToggle.checked = result.showLastContentPaint || false;
+            timeAfterLastContentPaintInput.value = result.timeAfterLastContentPaint || 100;
 
-        // Update the disabled state of the time input based on toggle
-        timeAfterLastContentPaintInput.disabled = !showLastContentPaintToggle.checked;
-    });
+            // Set color pickers to stored values or defaults
+            pointerDownColorInput.value = result.pointerDownColor || DEFAULT_POINTER_DOWN_COLOR;
+            pointerUpColorInput.value = result.pointerUpColor || DEFAULT_POINTER_UP_COLOR;
+
+            // Update the disabled state of the time input based on toggle
+            timeAfterLastContentPaintInput.disabled = !showLastContentPaintToggle.checked;
+        }
+    );
 
     // Add a listener for the showLastContentPaint toggle to enable/disable the time input
     showLastContentPaintToggle.addEventListener("change", () => {
         timeAfterLastContentPaintInput.disabled = !showLastContentPaintToggle.checked;
+    });
+
+    // Add reset buttons functionality
+    resetPointerDownColorButton.addEventListener("click", () => {
+        pointerDownColorInput.value = DEFAULT_POINTER_DOWN_COLOR;
+    });
+
+    resetPointerUpColorButton.addEventListener("click", () => {
+        pointerUpColorInput.value = DEFAULT_POINTER_UP_COLOR;
     });
 
     // Save settings when button is clicked
@@ -31,6 +63,10 @@ document.addEventListener("DOMContentLoaded", () => {
         const fpsComparisonValue = parseInt(fpsComparisonValueInput.value, 10);
         const showLastContentPaint = showLastContentPaintToggle.checked;
         const timeAfterLastContentPaint = parseInt(timeAfterLastContentPaintInput.value, 10);
+
+        // Get color values directly from the color pickers
+        const pointerDownColor = pointerDownColorInput.value;
+        const pointerUpColor = pointerUpColorInput.value;
 
         // Validate number inputs
         if (isNaN(fpsComparisonValue) || fpsComparisonValue < 1 || fpsComparisonValue > 240) {
@@ -49,6 +85,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 fpsComparisonValue,
                 showLastContentPaint,
                 timeAfterLastContentPaint,
+                pointerDownColor,
+                pointerUpColor,
             },
             () => {
                 // Show success message
