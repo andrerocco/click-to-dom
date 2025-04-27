@@ -145,7 +145,7 @@
                     </div>
                     <div id="next-frame-pointerdown-fps" class="next-frame-fps-value" data-extension-ui="true">
                         <span id="next-frame-pointerdown-time" class="next-frame-fps-time" data-extension-ui="true">-</span>
-                        <span id="next-frame-pointerdown-frames" class="next-frame-fps-frames" data-extension-ui="true">-</span>
+                        <span id="next-frame-pointerdown-frames" class="next-frame-fps-frames" data-extension-ui="true"></span>
                     </div>
                 </div>
                 <div class="next-frame-stats-section" data-extension-ui="true">
@@ -250,7 +250,7 @@
                     if (this.loadingState[type]) {
                         // Show loading state with pulsing animation
                         timeElement.textContent = "Waiting...";
-                        framesElement.textContent = "...";
+                        framesElement.textContent = "";
                         timeElement.classList.add("next-frame-loading");
                         framesElement.classList.add("next-frame-loading");
                     } else {
@@ -266,7 +266,7 @@
                         } else {
                             // Show as stale/empty state
                             timeElement.textContent = "-";
-                            framesElement.textContent = "-";
+                            framesElement.textContent = "";
                             timeElement.classList.add("next-frame-stale");
                             framesElement.classList.add("next-frame-stale");
                         }
