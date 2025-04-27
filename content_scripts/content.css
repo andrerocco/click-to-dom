@@ -2,8 +2,7 @@
 
 :root {
     --next-frame-text-primary: #fff;
-    --next-frame-text-secondary: #d2d4d7;
-    --next-frame-text-tertiary: rgba(255, 255, 255, 0.5);
+    --next-frame-text-secondary: #9b9b9b;
 }
 
 /* Pointer Indicator Styles */
@@ -48,6 +47,7 @@
     top: 20px;
     right: 20px;
     width: 180px;
+    /* width: auto; */
 
     /* Fallback for browsers that don't support backdrop-filter */
     background-color: rgba(19, 21, 23, 0.9);
@@ -84,8 +84,6 @@
 }
 
 .next-frame-stats-title {
-    font-family: monospace;
-
     color: var(--next-frame-text-primary);
 }
 
@@ -93,22 +91,42 @@
     display: flex;
     width: 100%;
     justify-content: space-between;
+    gap: 4px;
 }
 
 .next-frame-fps-time {
-    font-family: monospace;
-
-    color: #16a34a; /* text-green-600 */
+    color: #19d05c;
+    white-space: nowrap;
 }
 
 .next-frame-fps-frames {
-    font-family: monospace;
-
     color: var(--next-frame-text-secondary);
+    white-space: nowrap;
+    padding-left: 8px;
 }
 
 .next-frame-stats-value {
-    font-family: monospace;
+    color: #19d05c; /* TODO: Make these change color based on the delay (change on content.js) */
+}
 
-    color: #16a34a; /* TODO: Make these change color based on the delay (change on content.js) */
+/* Loading indicator animation */
+@keyframes pulse {
+    0% {
+        opacity: 0.4;
+    }
+    50% {
+        opacity: 0.8;
+    }
+    100% {
+        opacity: 0.4;
+    }
+}
+
+.next-frame-loading {
+    animation: pulse 1.2s ease-in-out infinite;
+    color: #ffa500 !important; /* Orange color for loading state */
+}
+
+.next-frame-stale {
+    color: var(--next-frame-text-secondary);
 }

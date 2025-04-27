@@ -223,6 +223,9 @@
                 const framesCustom = frames > 10 ? Math.ceil(frames) : frames.toFixed(1);
                 framesEl.textContent = `${framesCustom}F @ ${customFps}FPS`;
             }
+
+            // Force a render to ensure DOM is updated with correct classes
+            this.render();
         }
 
         render() {
@@ -240,10 +243,16 @@
                 const framesElement = this.element.querySelector(`#next-frame-${type}-frames`);
 
                 if (timeElement && framesElement) {
+                    // Reset classes first
+                    timeElement.classList.remove("next-frame-loading", "next-frame-stale");
+                    framesElement.classList.remove("next-frame-loading", "next-frame-stale");
+
                     if (this.loadingState[type]) {
-                        // Show loading state
-                        timeElement.textContent = "-";
-                        framesElement.textContent = "-";
+                        // Show loading state with pulsing animation
+                        timeElement.textContent = "Waiting...";
+                        framesElement.textContent = "...";
+                        timeElement.classList.add("next-frame-loading");
+                        framesElement.classList.add("next-frame-loading");
                     } else {
                         if (value) {
                             // Update milliseconds
@@ -255,8 +264,11 @@
                             const framesCustom = (value / (1000 / customFps)).toFixed(1);
                             framesElement.textContent = `${framesCustom}F @ ${customFps}FPS`;
                         } else {
+                            // Show as stale/empty state
                             timeElement.textContent = "-";
                             framesElement.textContent = "-";
+                            timeElement.classList.add("next-frame-stale");
+                            framesElement.classList.add("next-frame-stale");
                         }
                     }
                 }
@@ -520,9 +532,10 @@
         calculateUpdate(eventType) {
             if (!this.active) return;
 
-            this.statisticsOverlayUI.setLoadingState(eventType, true); // Set loading state to true
-            this.resetObservers(eventType); // Clean up any existing observer for this event type
-            this.clearTimeouts(eventType); // Clear any existing timeout for this event type
+            // Set loading state to true and update the UI
+            this.statisticsOverlayUI.setLoadingState(eventType, true);
+            this.resetObservers(eventType); // Clean up any existing observer
+            this.clearTimeouts(eventType); // Clear any existing timeout
 
             // Start timing and create a new mutation observer
             const startTime = performance.now();
@@ -534,9 +547,9 @@
                 if (mutations.every((mutation) => this.isExtensionUIMutation(mutation))) return;
 
                 const duration = performance.now() - startTime;
-                this.statisticsOverlayUI.updateStats(eventType, duration);
 
-                // console.log(`Mutation observed for ${eventType}: ${duration}ms`);
+                // This will update stats and remove the loading animation
+                this.statisticsOverlayUI.updateStats(eventType, duration);
 
                 if (this.recording && this.currentInteraction) {
                     // Update interaction with the timing information
@@ -559,7 +572,7 @@
                 // Clear the safety timeout since we got a valid measurement
                 this.clearTimeouts(eventType);
 
-                // EDGE CASE: For sites that navigate on pointerdown, all mutations may happend
+                // EDGE CASE: For sites that navigate on pointerdown, all mutations may happen
                 // before pointerup. In this case, we need to set a timeout to clean up the
                 // pending pointerup observer.
                 if (eventType === "pointerdown" && this.active && !this.observers["pointerup"]) {
@@ -582,15 +595,15 @@
                 if (this.observers[eventType]) {
                     this.resetObservers(eventType);
 
-                    // TODO: This can be called if the user hondle pointerdown for too long, maybe
-                    // handle that case and make it show "timed out"
-
-                    // Reset the loading state without displaying any timing value
-                    // This is the key fix - don't update stats, just reset the loading indicator
+                    // EDGE CASE: This timeout can be called if the user hondle pointerdown for too long.
+                    // For now the fix is to just reset the loading state and clear the stats, but maybe
+                    // show a timeout message in the UI?
                     this.statisticsOverlayUI.setLoadingState(eventType, false);
 
                     // Clear any partial data for this event type from the stats
                     this.statisticsOverlayUI.stats[eventType] = null;
+
+                    // Force a render to update UI
                     this.statisticsOverlayUI.render();
                 }
             }, 5000); // 5 seconds timeout
