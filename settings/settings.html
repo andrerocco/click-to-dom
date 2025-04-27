@@ -27,6 +27,13 @@
             margin: 0;
         }
 
+        input {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+
+        }
+
         body {
             font-size: 1rem;
             width: 100%;
@@ -45,8 +52,8 @@
 
         .container {
             margin: 0 auto;
-            width: 800px;
-            max-width: 100%;
+            width: 100%;
+            max-width: 1000px;
             box-sizing: border-box;
             padding: 2.75rem 1rem;
         }
@@ -83,12 +90,14 @@
             border-radius: 0.75rem;
             background-color: var(--card-background);
             border: 1px solid var(--card-border);
+            margin-bottom: 20px;
         }
 
         .settings-option {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 32px;
             padding: 0.6875rem 0.875rem 0.6875rem 0.75rem;
         }
 
@@ -98,6 +107,16 @@
 
         .settings-option p {
             color: var(--text-tertiary);
+        }
+
+        .settings-option>*:last-child {
+            min-width: 100px;
+            flex-shrink: 0;
+        }
+
+        .settings-option>div:last-child {
+            display: flex;
+            justify-content: flex-end;
         }
 
         /* ----- Switch ----- */
@@ -141,16 +160,36 @@
             box-shadow: var(--switch-thumb-shadow);
         }
 
-        input:checked+.slider {
+        .switch input:checked+.slider {
             background-color: var(--switch-on-background);
         }
 
-        input:focus+.slider {
+        .switch input:focus+.slider {
             box-shadow: 0 0 1px var(--switch-on-background);
         }
 
-        input:checked+.slider:before {
+        .switch input:checked+.slider:before {
             transform: translateX(16px);
+        }
+
+        /* ----- Input field ----- */
+
+        .input-field {
+            width: 80px;
+            padding: 5px 8px;
+            border-radius: 4px;
+
+            text-align: left;
+            font-size: calc(14rem / 16);
+
+            border: 1px solid var(--card-border);
+            background-color: rgba(255, 255, 255, 0.08);
+            color: var(--text-primary);
+        }
+
+        .input-field:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
 
         /* ----- Button ----- */
@@ -198,6 +237,16 @@
             color: var(--text-tertiary);
             cursor: not-allowed;
         }
+
+        .success-message {
+            color: var(--switch-on-background);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .success-message.visible {
+            opacity: 1;
+        }
     </style>
 </head>
 
@@ -210,22 +259,56 @@
         <div class="settings-block">
             <div class="settings-option">
                 <div>
-                    <h3>Enable Extension</h3>
-                    <p class="description">Toggle the extension on or off</p>
+                    <h3>FPS reference value</h3>
+                    <p class="description">
+                        This is the FPS value that will be used to calculate the amount of frames that the delay took.
+                    </p>
                 </div>
-                <label class="switch">
-                    <input type="checkbox" id="enableExtension">
-                    <span class="slider"></span>
-                </label>
+                <div>
+                    <input type="number" id="fpsComparisonValue" class="input-field" min="1" max="240" value="60">
+                </div>
             </div>
         </div>
 
-        <!-- <div class="button-row">
-            <p class="success-message">Settings saved successfully</p>
-            <button>
+        <div class="settings-block">
+            <div class="settings-option">
+                <div>
+                    <h3>
+                        Show "Last Content Paint" (LCP) delay
+                    </h3>
+                    <p class="description">By default, the extension only shows the delay from the mouse actions to the
+                        First Paint (FP). Enabling this option will also show the delay until the Last Content Paint
+                        (LCP). For that to work, you will also need to set a timeout value.</p>
+                </div>
+                <div>
+
+                    <label class="switch">
+                        <input type="checkbox" id="showLastContentPaint">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="settings-option">
+                <div>
+                    <h3>"Last Content Paint" timeout (ms)</h3>
+                    <p class="description">This is the threshold value that will be used to determine the last content
+                        paint. Meaning that, after a mutation, if no more mutations are detected after this time, the
+                        extension will consider that the last content paint has been reached.</p>
+                </div>
+                <div>
+                    <input type="number" id="timeAfterLastContentPaint" class="input-field" min="0" step="10"
+                        value="100">
+                </div>
+            </div>
+        </div>
+
+        <div class="button-row">
+            <p class="success-message" id="status">Settings saved successfully</p>
+            <button id="saveButton">
                 Save
             </button>
-        </div> -->
+        </div>
     </div>
     <script src="settings.js"></script>
 </body>
