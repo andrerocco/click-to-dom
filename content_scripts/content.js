@@ -1,21 +1,54 @@
 (function () {
+    // Extracts setting else null, preventing error
+    async function getExtensionSettings(...keys) {
+        try {
+            const result = await chrome.storage.sync.get(keys);
+            return keys.length > 1 ? result : result[keys[0]] || null;
+        } catch (error) {
+            // console.error(`Error getting setting ${keys}:`, error);
+            return null;
+        }
+    }
+
     class PointerIndicatorUI {
         constructor() {
             this.currentIndicator = null;
+            this.removeTimeout = null;
+
+            // Settings
+            this.pointerDownColor = null;
+            this.pointerUpColor = null;
+            this.loadSettings();
+        }
+
+        async loadSettings() {
+            this.pointerDownColor = await getExtensionSettings("pointerDownColor");
+            this.pointerUpColor = await getExtensionSettings("pointerUpColor");
         }
 
         showPointerDown(x, y) {
+            // Clear any existing timeout
+            if (this.removeTimeout) {
+                clearTimeout(this.removeTimeout);
+                this.removeTimeout = null;
+            }
+
             // Remove any existing indicator first
             this.removeCurrentIndicator();
 
-            // Create new pointer down indicator (red)
+            // Create new pointer down indicator
             const element = document.createElement("div");
             element.className = "next-frame-pointer-indicator next-frame-pointer-down";
             element.setAttribute("data-extension-ui", "true");
             element.style.left = `${x}px`;
             element.style.top = `${y}px`;
-            document.body.appendChild(element);
 
+            // Apply custom color if it exists
+            if (this.pointerDownColor) {
+                element.style.backgroundColor = this.pointerDownColor;
+            }
+
+            document.body.appendChild(element);
             this.currentIndicator = element;
         }
 
@@ -23,18 +56,23 @@
             // Remove existing indicator
             this.removeCurrentIndicator();
 
-            // Create new pointer up indicator (yellow with animation)
+            // Create new pointer up indicator with animation
             const element = document.createElement("div");
             element.className = "next-frame-pointer-indicator next-frame-pointer-up";
             element.setAttribute("data-extension-ui", "true");
             element.style.left = `${x}px`;
             element.style.top = `${y}px`;
-            document.body.appendChild(element);
 
+            // Apply custom color if it exists
+            if (this.pointerUpColor) {
+                element.style.backgroundColor = this.pointerUpColor;
+            }
+
+            document.body.appendChild(element);
             this.currentIndicator = element;
 
             // Auto-remove after animation completes
-            setTimeout(() => this.removeCurrentIndicator(), 500);
+            this.removeTimeout = setTimeout(() => this.removeCurrentIndicator(), 500);
         }
 
         removeCurrentIndicator() {
@@ -60,15 +98,32 @@
                 pointerdown: false,
                 pointerup: false,
             };
-
             this.stats = {
                 pointerdown: null,
                 pointerup: null,
             };
-
+            this.settings = {
+                fpsComparisonValue: 60,
+                showLastContentPaint: false,
+            };
+            this.loadSettings();
             this.init();
             this.setupDrag();
             this.render(); // Initial render
+        }
+
+        async loadSettings() {
+            const settings = await getExtensionSettings("fpsComparisonValue", "showLastContentPaint");
+
+            if (settings) {
+                this.settings.fpsComparisonValue = settings.fpsComparisonValue || 60;
+                this.settings.showLastContentPaint = settings.showLastContentPaint || false;
+            }
+
+            // Update the overlay with the loaded settings
+            if (this.element) {
+                this.render();
+            }
         }
 
         init() {
@@ -77,7 +132,6 @@
             overlay.className = "next-frame-stats-overlay";
             overlay.setAttribute("data-extension-ui", "true"); // Mark as extension UI
             overlay.innerHTML = this.generateHTML();
-
             document.body.appendChild(overlay);
             this.element = overlay;
             this.hide(); // Start hidden
@@ -102,6 +156,17 @@
                     </div>
                     <div id="next-frame-pointerup-fps" class="next-frame-fps-value" data-extension-ui="true"></div>
                 </div>
+                ${
+                    this.settings.showLastContentPaint
+                        ? `
+                <div class="next-frame-stats-section" data-extension-ui="true">
+                    <div class="next-frame-stats-label" data-extension-ui="true">
+                        <span data-extension-ui="true">Last Content Paint</span>
+                        <span id="next-frame-contentpaint-value" class="next-frame-stats-value" data-extension-ui="true">-</span>
+                    </div>
+                </div>`
+                        : ""
+                }
             `;
         }
 
@@ -150,19 +215,20 @@
                 // Update milliseconds
                 valueEl.textContent = `${Math.round(duration)}ms`;
 
-                // Calculate frames at different refresh rates
-                const frames60fps = Math.ceil(duration / (1000 / 60));
-                const frames120fps = Math.ceil(duration / (1000 / 120));
-
-                fpsEl.innerHTML = `
-                    ${frames60fps}f @ 60fps<br>
-                    ${frames120fps}f @ 120fps
-                `;
+                // Calculate frames at custom fps value
+                const customFps = this.settings.fpsComparisonValue;
+                const framesCustom = Math.ceil(duration / (1000 / customFps));
+                fpsEl.innerHTML = `${framesCustom}f @ ${customFps}fps`;
             }
         }
 
         render() {
             if (!this.element) return;
+
+            // Update HTML if showLastContentPaint setting changed
+            if (this.element.innerHTML !== this.generateHTML()) {
+                this.element.innerHTML = this.generateHTML();
+            }
 
             // Update each stat type
             ["pointerdown", "pointerup"].forEach((type) => {
@@ -180,20 +246,25 @@
                         valueElement.textContent = value ? `${Math.round(value)}ms` : "-";
 
                         if (value) {
-                            // Calculate frames at different refresh rates
-                            const frames60fps = Math.ceil(value / (1000 / 60));
-                            const frames120fps = Math.ceil(value / (1000 / 120));
-
-                            fpsElement.innerHTML = `
-                                ${frames60fps}f @ 60fps<br>
-                                ${frames120fps}f @ 120fps
-                            `;
+                            // Calculate frames at custom fps value
+                            const customFps = this.settings.fpsComparisonValue;
+                            const framesCustom = Math.ceil(value / (1000 / customFps));
+                            fpsElement.innerHTML = `${framesCustom}f @ ${customFps}fps`;
                         } else {
                             fpsElement.innerHTML = "";
                         }
                     }
                 }
             });
+
+            // Update content paint info if enabled
+            if (this.settings.showLastContentPaint) {
+                const contentPaintEl = this.element.querySelector("#next-frame-contentpaint-value");
+                if (contentPaintEl) {
+                    // This would be updated with real data when content paint is detected
+                    contentPaintEl.textContent = "Waiting...";
+                }
+            }
         }
 
         setLoadingState(eventType, isLoading) {
@@ -229,6 +300,7 @@
         }
     }
 
+    // TODO: Remove for now, feature not implemented
     class Storage {
         static getStorageKey() {
             return `interactions_${window.location.origin}`;
@@ -462,6 +534,8 @@
                 const duration = performance.now() - startTime;
                 this.statisticsOverlayUI.updateStats(eventType, duration);
 
+                // console.log(`Mutation observed for ${eventType}: ${duration}ms`);
+
                 if (this.recording && this.currentInteraction) {
                     // Update interaction with the timing information
                     this.currentInteraction.updateDelay(eventType, duration);
@@ -487,15 +561,13 @@
                 // before pointerup. In this case, we need to set a timeout to clean up the
                 // pending pointerup observer.
                 if (eventType === "pointerdown" && this.active && !this.observers["pointerup"]) {
-                    // Set a safety timeout to cancel any pending pointerup observation
-                    // if no pointerup event happens within a reasonable time (e.g., 5 seconds)
                     this.timeouts["pointerup"] = setTimeout(() => {
                         console.log("Safety timeout: cleaning up pending pointerup observer");
                         if (this.observers["pointerup"]) {
                             this.resetObservers("pointerup");
                             this.statisticsOverlayUI.setLoadingState("pointerup", false);
                         }
-                    }, 2000); // 2 seconds should be enough time for a normal pointerup to occur
+                    }, 2000); // 2 seconds by default (make this a setting later)
                 }
             });
 
@@ -622,6 +694,14 @@
 
         const tracker = new DOMPaintTracker();
 
+        chrome.runtime.sendMessage({ action: "getState" }, (response) => {
+            if (response && response.isActive) {
+                tracker.activate();
+            } else {
+                tracker.deactivate();
+            }
+        });
+
         chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             console.log("Message received:", message.action);
 
@@ -635,7 +715,6 @@
                         isRecording: tracker.isRecording(),
                     });
                     break;
-
                 case "deactivate":
                     tracker.deactivate();
                     sendResponse({
@@ -644,7 +723,6 @@
                         isRecording: false,
                     });
                     break;
-
                 case "startRecording":
                     const started = tracker.startRecording();
                     sendResponse({
@@ -653,7 +731,6 @@
                         isRecording: tracker.isRecording(),
                     });
                     break;
-
                 case "stopRecording":
                     tracker.stopRecording();
                     sendResponse({
@@ -662,7 +739,6 @@
                         isRecording: false,
                     });
                     break;
-
                 case "getState":
                     sendResponse({
                         success: true,
@@ -670,6 +746,26 @@
                         isRecording: tracker.isRecording(),
                     });
                     break;
+                // case "settingsUpdated":
+                //     if (message.settings) {
+                //         // Only update statistics overlay settings which support dynamic updates
+                //         if (tracker.statisticsOverlayUI) {
+                //             tracker.statisticsOverlayUI.updateSettings(message.settings);
+                //         }
+
+                //         // For color changes, we don't do any dynamic updates
+                //         // User will need to refresh the page to see these changes
+
+                //         sendResponse({
+                //             success: true,
+                //         });
+                //     } else {
+                //         sendResponse({
+                //             success: false,
+                //             error: "Invalid settings",
+                //         });
+                //     }
+                //     break;
             }
             return true; // Required to use sendResponse asynchronously
         });
