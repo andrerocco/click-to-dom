@@ -1,89 +1,114 @@
 /* UI Elements for Next Frame Extension */
 
+:root {
+    --next-frame-text-primary: #fff;
+    --next-frame-text-secondary: #d2d4d7;
+    --next-frame-text-tertiary: rgba(255, 255, 255, 0.5);
+}
+
 /* Pointer Indicator Styles */
 .next-frame-pointer-indicator {
-  position: fixed;
-  border-radius: 50%;
-  pointer-events: none;
-  z-index: 999999;
-  transform: translate(-50%, -50%);
-  transition: background-color 0.3s, width 0.3s, height 0.3s, opacity 0.5s;
-  opacity: 0.7;
+    position: fixed;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 999999;
+    transform: translate(-50%, -50%);
+    transition: background-color 0.3s, width 0.3s, height 0.3s, opacity 0.5s;
+    opacity: 0.7;
 }
 
 .next-frame-pointer-down {
-  background-color: #FF0000; /* Red */
-  width: 15px;
-  height: 15px;
+    background-color: #ff0000; /* Red */
+    width: 15px;
+    height: 15px;
 }
 
 .next-frame-pointer-up {
-  background-color: #FFFF00; /* Yellow */
-  width: 25px;
-  height: 25px;
-  animation: fadeOutPointer 0.5s ease-out forwards;
+    background-color: #ffff00; /* Yellow */
+    width: 25px;
+    height: 25px;
+    animation: fadeOutPointer 0.5s ease-out forwards;
 }
 
 @keyframes fadeOutPointer {
-  0% {
-    opacity: 0.7;
-    transform: translate(-50%, -50%) scale(1);
-  }
-  100% {
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(1.5);
-  }
+    0% {
+        opacity: 0.7;
+        transform: translate(-50%, -50%) scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(1.5);
+    }
 }
 
-/* Statistics Overlay Styles */
+/* Statistics Overlay Styles - Updated to match Tailwind design */
 .next-frame-stats-overlay {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  width: 200px;
-  background-color: rgba(0, 0, 0, 0.8);
-  color: white;
-  font-family: monospace;
-  font-size: 12px;
-  padding: 10px;
-  border-radius: 5px;
-  z-index: 999998;
-  cursor: move;
-  user-select: none;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    z-index: 999998;
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    width: 180px;
+
+    /* Fallback for browsers that don't support backdrop-filter */
+    background-color: rgba(19, 21, 23, 0.9);
+    border-radius: 0.5rem;
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 3px 3px rgba(0, 0, 0, 0.1), 0 8px 7px rgba(0, 0, 0, 0.13),
+        0 17px 14px rgba(0, 0, 0, 0.17), 0 35px 29px rgba(0, 0, 0, 0.22), 0px -4px 4px 0px rgba(0, 0, 0, 0.04) inset;
+
+    font-size: calc(13rem / 16);
+    cursor: default;
+    /* user-select: none; // TODO: Manage user-select */
+    margin: 32px;
 }
 
-.next-frame-stats-header {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 8px;
-  padding-bottom: 5px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
-}
-
-.next-frame-stats-title {
-  font-weight: bold;
+@supports ((-webkit-backdrop-filter: blur(16px)) or (backdrop-filter: blur(16px))) {
+    .next-frame-stats-overlay {
+        background-color: #222b;
+        -webkit-backdrop-filter: blur(16px);
+        backdrop-filter: blur(16px);
+    }
 }
 
 .next-frame-stats-section {
-  margin-bottom: 8px;
+    padding: 10px;
+}
+
+.next-frame-stats-section + .next-frame-stats-section {
+    padding-top: 0;
 }
 
 .next-frame-stats-label {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 2px;
+    display: flex;
+    width: 100%;
+    margin-bottom: 0.25rem; /* part of space-y-1 */
 }
 
-.next-frame-stats-value {
-  font-weight: bold;
-  color: #4caf50;
+.next-frame-stats-title {
+    font-family: monospace;
+
+    color: var(--next-frame-text-primary);
 }
 
 .next-frame-fps-value {
-  display: flex;
-  justify-content: flex-end;
-  text-align: right;
-  color: #2196f3;
-  font-size: 11px;
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+}
+
+.next-frame-fps-time {
+    font-family: monospace;
+
+    color: #16a34a; /* text-green-600 */
+}
+
+.next-frame-fps-frames {
+    font-family: monospace;
+
+    color: var(--next-frame-text-secondary);
+}
+
+.next-frame-stats-value {
+    font-family: monospace;
+
+    color: #16a34a; /* TODO: Make these change color based on the delay (change on content.js) */
 }

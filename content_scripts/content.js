@@ -139,29 +139,30 @@
 
         generateHTML() {
             return `
-                <div class="next-frame-stats-header" data-extension-ui="true">
-                    <span class="next-frame-stats-title" data-extension-ui="true">Next Frame Stats</span>
+                <div class="next-frame-stats-section" data-extension-ui="true">
+                    <div class="next-frame-stats-label" data-extension-ui="true">
+                        <span class="next-frame-stats-title" data-extension-ui="true">Mouse down ↓</span>
+                    </div>
+                    <div id="next-frame-pointerdown-fps" class="next-frame-fps-value" data-extension-ui="true">
+                        <span id="next-frame-pointerdown-time" class="next-frame-fps-time" data-extension-ui="true">-</span>
+                        <span id="next-frame-pointerdown-frames" class="next-frame-fps-frames" data-extension-ui="true">-</span>
+                    </div>
                 </div>
                 <div class="next-frame-stats-section" data-extension-ui="true">
                     <div class="next-frame-stats-label" data-extension-ui="true">
-                        <span data-extension-ui="true">Pointer down</span>
-                        <span id="next-frame-pointerdown-value" class="next-frame-stats-value" data-extension-ui="true">-</span>
+                        <span class="next-frame-stats-title" data-extension-ui="true">Mouse up ↑</span>
                     </div>
-                    <div id="next-frame-pointerdown-fps" class="next-frame-fps-value" data-extension-ui="true"></div>
-                </div>
-                <div class="next-frame-stats-section" data-extension-ui="true">
-                    <div class="next-frame-stats-label" data-extension-ui="true">
-                        <span data-extension-ui="true">Pointer up</span>
-                        <span id="next-frame-pointerup-value" class="next-frame-stats-value" data-extension-ui="true">-</span>
+                    <div id="next-frame-pointerup-fps" class="next-frame-fps-value" data-extension-ui="true">
+                        <span id="next-frame-pointerup-time" class="next-frame-fps-time" data-extension-ui="true">-</span>
+                        <span id="next-frame-pointerup-frames" class="next-frame-fps-frames" data-extension-ui="true">-</span>
                     </div>
-                    <div id="next-frame-pointerup-fps" class="next-frame-fps-value" data-extension-ui="true"></div>
                 </div>
                 ${
-                    this.settings.showLastContentPaint
+                    this.settings.showLastContentPaint // TODO: Remove
                         ? `
                 <div class="next-frame-stats-section" data-extension-ui="true">
                     <div class="next-frame-stats-label" data-extension-ui="true">
-                        <span data-extension-ui="true">Last Content Paint</span>
+                        <span class="next-frame-stats-title" data-extension-ui="true">Last Content Paint</span>
                         <span id="next-frame-contentpaint-value" class="next-frame-stats-value" data-extension-ui="true">-</span>
                     </div>
                 </div>`
@@ -208,17 +209,19 @@
             this.stats[eventType] = duration;
 
             // Direct DOM element update for guaranteed refresh
-            const valueEl = document.getElementById(`next-frame-${eventType}-value`);
-            const fpsEl = document.getElementById(`next-frame-${eventType}-fps`);
+            const timeEl = document.getElementById(`next-frame-${eventType}-time`);
+            const framesEl = document.getElementById(`next-frame-${eventType}-frames`);
 
-            if (valueEl && fpsEl) {
+            if (timeEl && framesEl) {
                 // Update milliseconds
-                valueEl.textContent = `${Math.round(duration)}ms`;
+                const roundedDuration = Math.round(duration);
+                timeEl.textContent = `${roundedDuration}ms`;
 
                 // Calculate frames at custom fps value
                 const customFps = this.settings.fpsComparisonValue;
-                const framesCustom = Math.ceil(duration / (1000 / customFps));
-                fpsEl.innerHTML = `${framesCustom}f @ ${customFps}fps`;
+                const frames = duration / (1000 / this.settings.fpsComparisonValue);
+                const framesCustom = frames > 10 ? Math.ceil(frames) : frames.toFixed(1);
+                framesEl.textContent = `${framesCustom}F @ ${customFps}FPS`;
             }
         }
 
@@ -233,25 +236,27 @@
             // Update each stat type
             ["pointerdown", "pointerup"].forEach((type) => {
                 const value = this.stats[type];
-                const valueElement = this.element.querySelector(`#next-frame-${type}-value`);
-                const fpsElement = this.element.querySelector(`#next-frame-${type}-fps`);
+                const timeElement = this.element.querySelector(`#next-frame-${type}-time`);
+                const framesElement = this.element.querySelector(`#next-frame-${type}-frames`);
 
-                if (valueElement && fpsElement) {
+                if (timeElement && framesElement) {
                     if (this.loadingState[type]) {
                         // Show loading state
-                        valueElement.textContent = "-";
-                        fpsElement.innerHTML = "";
+                        timeElement.textContent = "-";
+                        framesElement.textContent = "-";
                     } else {
-                        // Update milliseconds
-                        valueElement.textContent = value ? `${Math.round(value)}ms` : "-";
-
                         if (value) {
+                            // Update milliseconds
+                            const roundedValue = Math.round(value);
+                            timeElement.textContent = `${roundedValue}ms`;
+
                             // Calculate frames at custom fps value
                             const customFps = this.settings.fpsComparisonValue;
-                            const framesCustom = Math.ceil(value / (1000 / customFps));
-                            fpsElement.innerHTML = `${framesCustom}f @ ${customFps}fps`;
+                            const framesCustom = (value / (1000 / customFps)).toFixed(1);
+                            framesElement.textContent = `${framesCustom}F @ ${customFps}FPS`;
                         } else {
-                            fpsElement.innerHTML = "";
+                            timeElement.textContent = "-";
+                            framesElement.textContent = "-";
                         }
                     }
                 }
@@ -409,9 +414,6 @@
             return this;
         }
 
-        /**
-         * Save this interaction to storage
-         */
         async save() {
             if (this.saved) return;
 
@@ -579,7 +581,17 @@
                 console.log(`Safety timeout: no mutations detected for ${eventType} after 5 seconds`);
                 if (this.observers[eventType]) {
                     this.resetObservers(eventType);
+
+                    // TODO: This can be called if the user hondle pointerdown for too long, maybe
+                    // handle that case and make it show "timed out"
+
+                    // Reset the loading state without displaying any timing value
+                    // This is the key fix - don't update stats, just reset the loading indicator
                     this.statisticsOverlayUI.setLoadingState(eventType, false);
+
+                    // Clear any partial data for this event type from the stats
+                    this.statisticsOverlayUI.stats[eventType] = null;
+                    this.statisticsOverlayUI.render();
                 }
             }, 5000); // 5 seconds timeout
 
