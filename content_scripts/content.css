@@ -1,0 +1,87 @@
+/* UI Elements for Next Frame Extension */
+
+/* Pointer Indicator Styles */
+.next-frame-pointer-indicator {
+  position: fixed;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 999999;
+  transform: translate(-50%, -50%);
+  transition: background-color 0.3s, width 0.3s, height 0.3s, opacity 0.5s;
+}
+
+.next-frame-pointer-down {
+  background-color: rgba(255, 0, 0, 0.7); /* Red */
+  width: 15px;
+  height: 15px;
+}
+
+.next-frame-pointer-up {
+  background-color: rgba(255, 255, 0, 0.7); /* Yellow */
+  width: 25px;
+  height: 25px;
+  animation: fadeOutPointer 0.5s ease-out forwards;
+}
+
+@keyframes fadeOutPointer {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.5);
+  }
+}
+
+/* Statistics Overlay Styles */
+.next-frame-stats-overlay {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  width: 200px;
+  background-color: rgba(0, 0, 0, 0.8);
+  color: white;
+  font-family: monospace;
+  font-size: 12px;
+  padding: 10px;
+  border-radius: 5px;
+  z-index: 999998;
+  cursor: move;
+  user-select: none;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.next-frame-stats-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.next-frame-stats-title {
+  font-weight: bold;
+}
+
+.next-frame-stats-section {
+  margin-bottom: 8px;
+}
+
+.next-frame-stats-label {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 2px;
+}
+
+.next-frame-stats-value {
+  font-weight: bold;
+  color: #4caf50;
+}
+
+.next-frame-fps-value {
+  color: #2196f3;
+  font-size: 11px;
+  margin-left: 10px;
+  padding-left: 10px;
+}
