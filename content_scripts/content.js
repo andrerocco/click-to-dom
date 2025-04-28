@@ -127,13 +127,25 @@
             this.settings = {
                 fpsComparisonValue: 60,
                 showLastContentPaint: false,
+                emptyStateLabel: "-",
+                loadingStateLabel: "Waiting...",
+                timeoutStateLabel: "Timed out",
             };
         }
 
         async mount() {
-            const settings = await getExtensionSettings("fpsComparisonValue", "showLastContentPaint");
+            const settings = await getExtensionSettings(
+                "fpsComparisonValue",
+                "showLastContentPaint",
+                "emptyStateLabel",
+                "loadingStateLabel",
+                "timeoutStateLabel"
+            );
             this.settings.fpsComparisonValue = settings?.fpsComparisonValue || this.settings.fpsComparisonValue;
             this.settings.showLastContentPaint = settings?.showLastContentPaint || this.settings.showLastContentPaint;
+            this.settings.emptyStateLabel = settings?.emptyStateLabel || this.settings.emptyStateLabel;
+            this.settings.loadingStateLabel = settings?.loadingStateLabel || this.settings.loadingStateLabel;
+            this.settings.timeoutStateLabel = settings?.timeoutStateLabel || this.settings.timeoutStateLabel;
             console.log("StatisticsOverlayUI Settings loaded:", this.settings);
 
             // Create overlay element
@@ -143,7 +155,7 @@
             document.body.appendChild(overlay);
             this.element = overlay;
 
-            // Set html content
+            // Set html content with custom empty state label
             this.element.innerHTML = `
                 <div class="clicktodom-stats-section" data-extension-ui="true">
                     <div class="clicktodom-stats-label" data-extension-ui="true">
@@ -151,7 +163,9 @@
                     </div>
                     <div id="clicktodom-pointerdown-firstpaint-delay" class="clicktodom-stats-row" data-extension-ui="true">
                         <div data-extension-ui="true">    
-                            <span id="clicktodom-pointerdown-time" class="clicktodom-stats-delay clicktodom-stale" data-extension-ui="true">-</span>
+                            <span id="clicktodom-pointerdown-time" class="clicktodom-stats-delay clicktodom-stale" data-extension-ui="true">${
+                                this.settings.emptyStateLabel
+                            }</span>
                             ${
                                 this.settings.showLastContentPaint
                                     ? `<span class="clicktodom-stats-type" data-extension-ui="true"> (FP)</span>`
@@ -165,7 +179,7 @@
                             ? `
                             <div id="clicktodom-pointerdown-lastpaint-delay" class="clicktodom-stats-row" data-extension-ui="true">
                                 <div>
-                                    <span id="clicktodom-pointerdown-lastpaint-time" class="clicktodom-stats-delay clicktodom-stale" data-extension-ui="true">-</span>
+                                    <span id="clicktodom-pointerdown-lastpaint-time" class="clicktodom-stats-delay clicktodom-stale" data-extension-ui="true">${this.settings.emptyStateLabel}</span>
                                     <span class="clicktodom-stats-type" data-extension-ui="true"> (LCP)</span>
                                 </div>
                                 <span id="clicktodom-pointerdown-lastpaint-frames" class="clicktodom-stats-frames clicktodom-stale" data-extension-ui="true"></span>
@@ -180,7 +194,9 @@
                     </div>
                     <div id="clicktodom-pointerup-firstpaint-delay" class="clicktodom-stats-row" data-extension-ui="true">
                         <div data-extension-ui="true">
-                            <span id="clicktodom-pointerup-time" class="clicktodom-stats-delay clicktodom-stale" data-extension-ui="true">-</span>
+                            <span id="clicktodom-pointerup-time" class="clicktodom-stats-delay clicktodom-stale" data-extension-ui="true">${
+                                this.settings.emptyStateLabel
+                            }</span>
                             ${
                                 this.settings.showLastContentPaint
                                     ? `<span class="clicktodom-stats-type" data-extension-ui="true"> (FP)</span>`
@@ -194,7 +210,7 @@
                             ? `
                             <div id="clicktodom-pointerup-lastpaint-delay" class="clicktodom-stats-row" data-extension-ui="true">
                                 <div data-extension-ui="true">
-                                    <span id="clicktodom-pointerup-lastpaint-time" class="clicktodom-stats-delay clicktodom-stale" data-extension-ui="true">-</span>
+                                    <span id="clicktodom-pointerup-lastpaint-time" class="clicktodom-stats-delay clicktodom-stale" data-extension-ui="true">${this.settings.emptyStateLabel}</span>
                                     <span class="clicktodom-stats-type" data-extension-ui="true"> (LCP)</span>
                                 </div>
                                 <span id="clicktodom-pointerup-lastpaint-frames" class="clicktodom-stats-frames clicktodom-stale" data-extension-ui="true"></span>
@@ -295,12 +311,12 @@
                         framesEl.classList.remove("clicktodom-loading", "clicktodom-stale", "clicktodom-timeout-label");
 
                         if (isLoading) {
-                            timeEl.textContent = "Waiting...";
+                            timeEl.textContent = this.settings.loadingStateLabel;
                             framesEl.textContent = "";
                             timeEl.classList.add("clicktodom-loading");
                             framesEl.classList.add("clicktodom-loading");
                         } else if (isTimedOut) {
-                            timeEl.textContent = "Timed out";
+                            timeEl.textContent = this.settings.timeoutStateLabel;
                             framesEl.textContent = "";
                             timeEl.classList.add("clicktodom-timeout-label");
                             framesEl.classList.add("clicktodom-timeout-label");
@@ -314,7 +330,7 @@
                             const framesText = frames > 10 ? Math.ceil(frames) : frames.toFixed(1);
                             framesEl.textContent = `${framesText}F @ ${customFps}FPS`;
                         } else {
-                            timeEl.textContent = "-";
+                            timeEl.textContent = this.settings.emptyStateLabel;
                             framesEl.textContent = "";
                             timeEl.classList.add("clicktodom-stale");
                             framesEl.classList.add("clicktodom-stale");

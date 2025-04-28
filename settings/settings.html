@@ -182,7 +182,6 @@
         }
 
         /* ----- Input field ----- */
-
         .input-field {
             width: 80px;
             padding: 5px 8px;
@@ -205,6 +204,12 @@
         .input-field[type="number"]::-webkit-outer-spin-button {
             -webkit-appearance: none;
             margin: 0;
+        }
+
+        .input-with-reset-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         /* ----- Color picker ----- */
@@ -233,7 +238,8 @@
             gap: 8px;
         }
 
-        .color-picker-container button {
+        /* ----- Button ----- */
+        .reset-button {
             background: none;
             border: none;
             cursor: pointer;
@@ -251,18 +257,18 @@
             border-radius: 4px;
         }
 
-        .color-picker-container button:hover {
+        .reset-button:hover {
             background-color: rgba(255, 255, 255, 0.1);
         }
-
-        /* ----- Button ----- */
 
         .save-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
             gap: 10px;
-            margin-top: 45px;
+            margin-top: 20px;
+            margin-bottom: 20px;
+            padding: 0 0.875rem;
         }
 
         .save-row button {
@@ -325,64 +331,6 @@
     <div class="gradient"></div>
     <div class="container">
         <h1 class="settings-title">Settings <span>&nbsp;(Click to DOM extension)</span></h1>
-
-        <h2>Appearance</h2>
-
-        <div class="settings-block">
-            <div class="settings-option">
-                <div>
-                    <h3>FPS reference value</h3>
-                    <p class="description">
-                        This is the FPS value that will be used to calculate the amount of frames that the delay took.
-                    </p>
-                </div>
-                <div>
-                    <input type="number" id="fpsComparisonValue" class="input-field" min="1" max="240" value="60"
-                        placeholder="FPS">
-                </div>
-            </div>
-        </div>
-
-        <div class="settings-block">
-            <div class="settings-option">
-                <div>
-                    <h3>Pointer down color</h3>
-                    <p class="description">The color shown when the pointer is pressed down.</p>
-                </div>
-                <div>
-                    <div class="color-picker-container">
-                        <input type="color" id="pointerDownColor" class="color-input" value="#0066FF">
-                        <button id="resetPointerDownColor" title="Reset to default">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="ionicon" viewBox="0 0 512 512">
-                                <path d="M320 146s24.36-12-64-12a160 160 0 10160 160" fill="none" stroke="currentColor"
-                                    stroke-linecap="round" stroke-miterlimit="10" stroke-width="32" />
-                                <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
-                                    stroke-width="32" d="M256 58l80 80-80 80" />
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-            </div>
-            <div class="settings-option">
-                <div>
-                    <h3>Pointer up color</h3>
-                    <p class="description">The color shown when the pointer is released.</p>
-                </div>
-                <div>
-                    <div class="color-picker-container">
-                        <input type="color" id="pointerUpColor" class="color-input" value="#FFFF00">
-                        <button id="resetPointerUpColor" title="Reset to default">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="ionicon" viewBox="0 0 512 512">
-                                <path d="M320 146s24.36-12-64-12a160 160 0 10160 160" fill="none" stroke="currentColor"
-                                    stroke-linecap="round" stroke-miterlimit="10" stroke-width="32" />
-                                <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
-                                    stroke-width="32" d="M256 58l80 80-80 80" />
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
 
         <h2>Behavior</h2>
 
@@ -454,14 +402,139 @@
             </div>
         </div>
 
-        <!-- TODO: Remove this save button or create one per section -->
         <div class="save-row">
             <div>
-                <p class="success-message" id="status">
-                    Settings saved. Refresh the pages where the extension is active to apply changes.
+                <p class="success-message" id="behaviorStatus">
+                    Behavior settings saved. Refresh pages where the extension is active.
                 </p>
             </div>
-            <button id="saveButton">
+            <button id="saveBehaviorButton">
+                Save
+            </button>
+        </div>
+
+        <h2>Appearance</h2>
+
+        <div class="settings-block">
+            <div class="settings-option">
+                <div>
+                    <h3>FPS reference value</h3>
+                    <p class="description">
+                        This is the FPS value that will be used to calculate the amount of frames that the delay took.
+                    </p>
+                </div>
+                <div>
+                    <input type="number" id="fpsComparisonValue" class="input-field" min="1" max="240" value="60"
+                        placeholder="FPS">
+                </div>
+            </div>
+        </div>
+
+        <div class="settings-block">
+            <div class="settings-option">
+                <div>
+                    <h3>Pointer down color</h3>
+                    <p class="description">The color shown when the pointer is pressed down.</p>
+                </div>
+                <div>
+                    <div class="color-picker-container">
+                        <input type="color" id="pointerDownColor" class="color-input" value="#0066FF">
+                        <button class="reset-button" id="resetPointerDownColor" title="Reset to default">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="ionicon" viewBox="0 0 512 512">
+                                <path d="M320 146s24.36-12-64-12a160 160 0 10160 160" fill="none" stroke="currentColor"
+                                    stroke-linecap="round" stroke-miterlimit="10" stroke-width="32" />
+                                <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                                    stroke-width="32" d="M256 58l80 80-80 80" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="settings-option">
+                <div>
+                    <h3>Pointer up color</h3>
+                    <p class="description">The color shown when the pointer is released.</p>
+                </div>
+                <div>
+                    <div class="color-picker-container">
+                        <input type="color" id="pointerUpColor" class="color-input" value="#FFFF00">
+                        <button class="reset-button" id="resetPointerUpColor" title="Reset to default">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="ionicon" viewBox="0 0 512 512">
+                                <path d="M320 146s24.36-12-64-12a160 160 0 10160 160" fill="none" stroke="currentColor"
+                                    stroke-linecap="round" stroke-miterlimit="10" stroke-width="32" />
+                                <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                                    stroke-width="32" d="M256 58l80 80-80 80" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="settings-block">
+            <div class="settings-option">
+                <div>
+                    <h3>Empty state label</h3>
+                    <p class="description">Text displayed before any measurement is taken.</p>
+                </div>
+                <div class="input-with-reset-container">
+                    <input type="text" id="emptyStateLabel" class="input-field" maxlength="25" value="-"
+                        style="width: 130px;">
+                    <button class="reset-button" id="resetEmptyStateLabel" title="Reset to default">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="ionicon" viewBox="0 0 512 512">
+                            <path d="M320 146s24.36-12-64-12a160 160 0 10160 160" fill="none" stroke="currentColor"
+                                stroke-linecap="round" stroke-miterlimit="10" stroke-width="32" />
+                            <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                                stroke-width="32" d="M256 58l80 80-80 80" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <div class="settings-option">
+                <div>
+                    <h3>Loading state label</h3>
+                    <p class="description">Text displayed while waiting for DOM updates.</p>
+                </div>
+                <div class="input-with-reset-container">
+                    <input type="text" id="loadingStateLabel" class="input-field" maxlength="25" value="Waiting..."
+                        style="width: 130px;">
+                    <button class="reset-button" id="resetLoadingStateLabel" title="Reset to default">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="ionicon" viewBox="0 0 512 512">
+                            <path d="M320 146s24.36-12-64-12a160 160 0 10160 160" fill="none" stroke="currentColor"
+                                stroke-linecap="round" stroke-miterlimit="10" stroke-width="32" />
+                            <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                                stroke-width="32" d="M256 58l80 80-80 80" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <div class="settings-option">
+                <div>
+                    <h3>Timeout state label</h3>
+                    <p class="description">Text displayed when DOM updates time out.</p>
+                </div>
+                <div class="input-with-reset-container">
+                    <input type="text" id="timeoutStateLabel" class="input-field" maxlength="25" value="Timed out"
+                        style="width: 130px;">
+                    <button class="reset-button" id="resetTimeoutStateLabel" title="Reset to default">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="ionicon" viewBox="0 0 512 512">
+                            <path d="M320 146s24.36-12-64-12a160 160 0 10160 160" fill="none" stroke="currentColor"
+                                stroke-linecap="round" stroke-miterlimit="10" stroke-width="32" />
+                            <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                                stroke-width="32" d="M256 58l80 80-80 80" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="save-row">
+            <div>
+                <p class="success-message" id="appearanceStatus">
+                    Appearance settings saved. Refresh pages where the extension is active.
+                </p>
+            </div>
+            <button id="saveAppearanceButton">
                 Save
             </button>
         </div>
