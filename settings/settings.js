@@ -17,7 +17,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const resetPointerUpColorButton = document.getElementById("resetPointerUpColor");
 
     // Default colors
-    const DEFAULT_POINTER_DOWN_COLOR = "#FF0000"; // Red
+    const DEFAULT_POINTER_DOWN_COLOR = "#0066FF"; // Bright blue
     const DEFAULT_POINTER_UP_COLOR = "#FFFF00"; // Yellow
 
     // Load current settings

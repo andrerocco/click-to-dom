@@ -1,5 +1,3 @@
-/* UI Elements for Next Frame Extension */
-
 :root {
     --next-frame-text-primary: #fff;
     --next-frame-text-secondary: #9b9b9b;
@@ -17,7 +15,7 @@
 }
 
 .next-frame-pointer-down {
-    background-color: #ff0000; /* Red */
+    background-color: #0066ff; /* Red */
     width: 15px;
     height: 15px;
 }

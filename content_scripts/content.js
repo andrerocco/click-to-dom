@@ -1,7 +1,7 @@
 /**
- * Next Frame Extension
+ * Click to DOM
  *
- * Next Frame is a Chrome extension that tracks pointer events on web pages
+ * Click to DOM is a Chrome extension that tracks pointer events on web pages
  * and calculates the time taken for the DOM to update after these events.
  *
  * It provides a visual indicator for pointer down and up events, and displays
