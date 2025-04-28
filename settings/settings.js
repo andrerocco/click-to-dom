@@ -41,9 +41,9 @@ document.addEventListener("DOMContentLoaded", () => {
             pointerDownColorInput.value = result.pointerDownColor || DEFAULT_POINTER_DOWN_COLOR;
             pointerUpColorInput.value = result.pointerUpColor || DEFAULT_POINTER_UP_COLOR;
 
-            // Set mutation timeout settings (default: enabled with 5000ms timeout)
+            // Set mutation timeout settings (default: enabled with 2500ms timeout)
             enableMutationTimeoutToggle.checked = result.enableMutationTimeout !== false; // Default to true if not set
-            mutationTimeoutValueInput.value = result.mutationTimeoutValue || 5000;
+            mutationTimeoutValueInput.value = result.mutationTimeoutValue || 2500;
 
             // Update the disabled state of the time input based on toggle
             timeAfterLastContentPaintInput.disabled = !showLastContentPaintToggle.checked;

@@ -450,7 +450,7 @@
             // Settings
             this.settings = {
                 enableMutationTimeout: true,
-                mutationTimeoutValue: 5000,
+                mutationTimeoutValue: 2500,
                 showLastContentPaint: false,
                 timeAfterLastContentPaint: 1000,
             };
@@ -477,7 +477,7 @@
 
             if (settings) {
                 this.settings.enableMutationTimeout = settings.enableMutationTimeout !== false; // Default to true
-                this.settings.mutationTimeoutValue = settings.mutationTimeoutValue || 5000;
+                this.settings.mutationTimeoutValue = settings.mutationTimeoutValue || 2500;
                 this.settings.showLastContentPaint = settings.showLastContentPaint || false;
                 this.settings.timeAfterLastContentPaint = settings.timeAfterLastContentPaint || 1000; // Default to 1s
             }
