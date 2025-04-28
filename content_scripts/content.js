@@ -558,8 +558,6 @@
 
             // Unmount the overlay and pointer indicator
             this.statisticsOverlayUI.unmount();
-            delete this.statisticsOverlayUI;
-            this.statisticsOverlayUI = null;
             this.pointerIndicatorUI.unmount();
 
             console.log("Tracker event listeners deactivated");
