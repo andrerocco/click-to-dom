@@ -1,3 +1,13 @@
+/**
+ * Next Frame Extension
+ *
+ * Next Frame is a Chrome extension that tracks pointer events on web pages
+ * and calculates the time taken for the DOM to update after these events.
+ *
+ * It provides a visual indicator for pointer down and up events, and displays
+ * the statistics in an overlay on the page.
+ */
+
 (function () {
     // Extracts setting else null, preventing error
     async function getExtensionSettings(...keys) {
@@ -16,14 +26,16 @@
             this.removeTimeout = null;
 
             // Settings
-            this.pointerDownColor = null;
-            this.pointerUpColor = null;
+            this.settings = {
+                pointerDownColor: null,
+                pointerUpColor: null,
+            };
             this.loadSettings();
         }
 
         async loadSettings() {
-            this.pointerDownColor = await getExtensionSettings("pointerDownColor");
-            this.pointerUpColor = await getExtensionSettings("pointerUpColor");
+            this.settings.pointerDownColor = await getExtensionSettings("pointerDownColor");
+            this.settings.pointerUpColor = await getExtensionSettings("pointerUpColor");
         }
 
         showPointerDown(x, y) {
@@ -44,8 +56,8 @@
             element.style.top = `${y}px`;
 
             // Apply custom color if it exists
-            if (this.pointerDownColor) {
-                element.style.backgroundColor = this.pointerDownColor;
+            if (this.settings.pointerDownColor) {
+                element.style.backgroundColor = this.settings.pointerDownColor;
             }
 
             document.body.appendChild(element);
@@ -64,8 +76,8 @@
             element.style.top = `${y}px`;
 
             // Apply custom color if it exists
-            if (this.pointerUpColor) {
-                element.style.backgroundColor = this.pointerUpColor;
+            if (this.settings.pointerUpColor) {
+                element.style.backgroundColor = this.settings.pointerUpColor;
             }
 
             document.body.appendChild(element);
@@ -315,6 +327,19 @@
         isVisible() {
             return this.visible;
         }
+
+        // Method to update settings when they change
+        updateSettings(newSettings) {
+            if (newSettings) {
+                if (newSettings.fpsComparisonValue) {
+                    this.settings.fpsComparisonValue = newSettings.fpsComparisonValue;
+                }
+                if (newSettings.showLastContentPaint !== undefined) {
+                    this.settings.showLastContentPaint = newSettings.showLastContentPaint;
+                }
+                this.render();
+            }
+        }
     }
 
     // TODO: Remove for now, feature not implemented
@@ -457,7 +482,13 @@
             this.recording = false;
             this.currentInteraction = null;
             this.observers = {};
-            this.timeouts = {}; // Add timeouts tracking object
+            this.timeouts = {};
+
+            // Settings for mutation timeout
+            this.settings = {
+                enableMutationTimeout: true,
+                mutationTimeoutValue: 5000,
+            };
 
             // Bind the event handlers to preserve context
             this.handlePointerDown = this.handlePointerDown.bind(this);
@@ -466,6 +497,18 @@
             // UI elements
             this.pointerIndicatorUI = new PointerIndicatorUI();
             this.statisticsOverlayUI = new StatisticsOverlayUI();
+
+            // Load settings
+            this.loadSettings();
+        }
+
+        async loadSettings() {
+            const settings = await getExtensionSettings("enableMutationTimeout", "mutationTimeoutValue");
+
+            if (settings) {
+                this.settings.enableMutationTimeout = settings.enableMutationTimeout !== false; // Default to true if not set
+                this.settings.mutationTimeoutValue = settings.mutationTimeoutValue || 5000;
+            }
         }
 
         getCurrentPageInfo() {
@@ -589,24 +632,26 @@
             // Store the observer for later cleanup if needed
             this.observers[eventType] = observer;
 
-            // Set a safety timeout to cancel this observation if no mutation occurs
-            this.timeouts[eventType] = setTimeout(() => {
-                console.log(`Safety timeout: no mutations detected for ${eventType} after 5 seconds`);
-                if (this.observers[eventType]) {
-                    this.resetObservers(eventType);
+            // Only set a safety timeout if enabled in settings
+            if (this.settings.enableMutationTimeout) {
+                const timeoutValue = this.settings.mutationTimeoutValue;
 
-                    // EDGE CASE: This timeout can be called if the user hondle pointerdown for too long.
-                    // For now the fix is to just reset the loading state and clear the stats, but maybe
-                    // show a timeout message in the UI?
-                    this.statisticsOverlayUI.setLoadingState(eventType, false);
+                this.timeouts[eventType] = setTimeout(() => {
+                    console.log(`Safety timeout: no mutations detected for ${eventType} after ${timeoutValue}ms`);
+                    if (this.observers[eventType]) {
+                        this.resetObservers(eventType);
 
-                    // Clear any partial data for this event type from the stats
-                    this.statisticsOverlayUI.stats[eventType] = null;
+                        // Reset the loading state and clear the stats
+                        this.statisticsOverlayUI.setLoadingState(eventType, false);
 
-                    // Force a render to update UI
-                    this.statisticsOverlayUI.render();
-                }
-            }, 5000); // 5 seconds timeout
+                        // Clear any partial data for this event type from the stats
+                        this.statisticsOverlayUI.stats[eventType] = null;
+
+                        // Force a render to update UI
+                        this.statisticsOverlayUI.render();
+                    }
+                }, timeoutValue);
+            }
 
             // Start observing all DOM changes
             observer.observe(document, {
@@ -710,6 +755,18 @@
         isRecording() {
             return this.recording;
         }
+
+        // Method to update settings when they change
+        updateSettings(newSettings) {
+            if (newSettings) {
+                if (newSettings.enableMutationTimeout !== undefined) {
+                    this.settings.enableMutationTimeout = newSettings.enableMutationTimeout;
+                }
+                if (newSettings.mutationTimeoutValue) {
+                    this.settings.mutationTimeoutValue = newSettings.mutationTimeoutValue;
+                }
+            }
+        }
     }
 
     if (window._domPaintTrackerActive) {
@@ -771,26 +828,39 @@
                         isRecording: tracker.isRecording(),
                     });
                     break;
-                // case "settingsUpdated":
-                //     if (message.settings) {
-                //         // Only update statistics overlay settings which support dynamic updates
-                //         if (tracker.statisticsOverlayUI) {
-                //             tracker.statisticsOverlayUI.updateSettings(message.settings);
-                //         }
+                case "settingsUpdated":
+                    if (message.settings) {
+                        // Only update statistics overlay settings which are relevant to it
+                        if (tracker.statisticsOverlayUI) {
+                            const overlaySettings = {
+                                fpsComparisonValue: message.settings.fpsComparisonValue,
+                                showLastContentPaint: message.settings.showLastContentPaint,
+                            };
+                            tracker.statisticsOverlayUI.updateSettings(overlaySettings);
+                        }
 
-                //         // For color changes, we don't do any dynamic updates
-                //         // User will need to refresh the page to see these changes
+                        // Update paint tracker settings
+                        if (
+                            message.settings.enableMutationTimeout !== undefined ||
+                            message.settings.mutationTimeoutValue
+                        ) {
+                            const trackerSettings = {
+                                enableMutationTimeout: message.settings.enableMutationTimeout,
+                                mutationTimeoutValue: message.settings.mutationTimeoutValue,
+                            };
+                            tracker.updateSettings(trackerSettings);
+                        }
 
-                //         sendResponse({
-                //             success: true,
-                //         });
-                //     } else {
-                //         sendResponse({
-                //             success: false,
-                //             error: "Invalid settings",
-                //         });
-                //     }
-                //     break;
+                        sendResponse({
+                            success: true,
+                        });
+                    } else {
+                        sendResponse({
+                            success: false,
+                            error: "Invalid settings",
+                        });
+                    }
+                    break;
             }
             return true; // Required to use sendResponse asynchronously
         });

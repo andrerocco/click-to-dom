@@ -6,6 +6,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const saveButton = document.getElementById("saveButton");
     const saveStatus = document.getElementById("status");
 
+    // Mutation timeout elements
+    const enableMutationTimeoutToggle = document.getElementById("enableMutationTimeout");
+    const mutationTimeoutValueInput = document.getElementById("mutationTimeoutValue");
+
     // Color picker elements
     const pointerDownColorInput = document.getElementById("pointerDownColor");
     const pointerUpColorInput = document.getElementById("pointerUpColor");
@@ -24,6 +28,8 @@ document.addEventListener("DOMContentLoaded", () => {
             "timeAfterLastContentPaint",
             "pointerDownColor",
             "pointerUpColor",
+            "enableMutationTimeout",
+            "mutationTimeoutValue",
         ],
         (result) => {
             // Set default values if settings don't exist yet
@@ -35,14 +41,24 @@ document.addEventListener("DOMContentLoaded", () => {
             pointerDownColorInput.value = result.pointerDownColor || DEFAULT_POINTER_DOWN_COLOR;
             pointerUpColorInput.value = result.pointerUpColor || DEFAULT_POINTER_UP_COLOR;
 
+            // Set mutation timeout settings (default: enabled with 5000ms timeout)
+            enableMutationTimeoutToggle.checked = result.enableMutationTimeout !== false; // Default to true if not set
+            mutationTimeoutValueInput.value = result.mutationTimeoutValue || 5000;
+
             // Update the disabled state of the time input based on toggle
             timeAfterLastContentPaintInput.disabled = !showLastContentPaintToggle.checked;
+            mutationTimeoutValueInput.disabled = !enableMutationTimeoutToggle.checked;
         }
     );
 
     // Add a listener for the showLastContentPaint toggle to enable/disable the time input
     showLastContentPaintToggle.addEventListener("change", () => {
         timeAfterLastContentPaintInput.disabled = !showLastContentPaintToggle.checked;
+    });
+
+    // Add a listener for the enableMutationTimeout toggle
+    enableMutationTimeoutToggle.addEventListener("change", () => {
+        mutationTimeoutValueInput.disabled = !enableMutationTimeoutToggle.checked;
     });
 
     // Add reset buttons functionality
@@ -60,6 +76,8 @@ document.addEventListener("DOMContentLoaded", () => {
         const fpsComparisonValue = parseInt(fpsComparisonValueInput.value, 10);
         const showLastContentPaint = showLastContentPaintToggle.checked;
         const timeAfterLastContentPaint = parseInt(timeAfterLastContentPaintInput.value, 10);
+        const enableMutationTimeout = enableMutationTimeoutToggle.checked;
+        const mutationTimeoutValue = parseInt(mutationTimeoutValueInput.value, 10);
 
         // Get color values directly from the color pickers
         const pointerDownColor = pointerDownColorInput.value;
@@ -76,6 +94,11 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
+        if (isNaN(mutationTimeoutValue) || mutationTimeoutValue < 100) {
+            alert("Mutation Timeout Value must be at least 100ms");
+            return;
+        }
+
         // Save to chrome.storage.sync
         chrome.storage.sync.set(
             {
@@ -84,6 +107,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 timeAfterLastContentPaint,
                 pointerDownColor,
                 pointerUpColor,
+                enableMutationTimeout,
+                mutationTimeoutValue,
             },
             () => {
                 // Show success message
@@ -103,6 +128,8 @@ document.addEventListener("DOMContentLoaded", () => {
                                 fpsComparisonValue,
                                 showLastContentPaint,
                                 timeAfterLastContentPaint,
+                                enableMutationTimeout,
+                                mutationTimeoutValue,
                             },
                         });
                     }

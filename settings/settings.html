@@ -73,14 +73,7 @@
             font-weight: 500;
             margin-bottom: 16px;
 
-            /* padding: 0 0.6875rem; */
-        }
-
-        h3 {
-            color: var(--text-primary);
-            font-size: 1rem;
-            font-weight: normal;
-            margin-bottom: 5px;
+            padding: 0 0.875rem;
         }
 
         p {
@@ -111,6 +104,15 @@
 
         .settings-option p {
             color: var(--text-tertiary);
+            font-size: 0.875rem;
+            line-height: 1.4;
+        }
+
+        .settings-option h3 {
+            color: var(--text-primary);
+            font-size: 1rem;
+            font-weight: normal;
+            margin-bottom: 5px;
         }
 
         .settings-option>*:last-child {
@@ -183,7 +185,7 @@
             padding: 5px 8px;
             border-radius: 4px;
 
-            text-align: left;
+            text-align: right;
             font-size: calc(14rem / 16);
 
             border: 1px solid var(--card-border);
@@ -196,13 +198,19 @@
             cursor: not-allowed;
         }
 
+        .input-field[type="number"]::-webkit-inner-spin-button,
+        .input-field[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
         /* ----- Color picker ----- */
         .color-input {
-            width: 38px;
-            height: 30px;
+            width: 28px;
+            height: 28px;
+            border-radius: 28px;
             padding: 0;
             border: 1px solid var(--card-border);
-            border-radius: 4px;
             overflow: hidden;
             background-color: transparent;
             cursor: pointer;
@@ -251,14 +259,14 @@
             justify-content: space-between;
             align-items: center;
             gap: 10px;
-            margin-top: 15px;
+            margin-top: 45px;
         }
 
         .save-row button {
             display: inline-flex;
             justify-content: center;
             align-items: center;
-            padding: 0.35rem 0.75rem;
+            padding: 0.25rem 0.55rem;
 
             outline: 0px;
             user-select: none;
@@ -315,6 +323,7 @@
     <div class="container">
         <h1 class="settings-title">Extension settings</h1>
 
+        <h2>Appearance</h2>
 
         <div class="settings-block">
             <div class="settings-option">
@@ -325,11 +334,89 @@
                     </p>
                 </div>
                 <div>
-                    <input type="number" id="fpsComparisonValue" class="input-field" min="1" max="240" value="60">
+                    <input type="number" id="fpsComparisonValue" class="input-field" min="1" max="240" value="60"
+                        placeholder="FPS">
                 </div>
             </div>
         </div>
 
+        <div class="settings-block">
+            <div class="settings-option">
+                <div>
+                    <h3>Pointer down color</h3>
+                    <p class="description">The color shown when the pointer is pressed down (default: red).</p>
+                </div>
+                <div>
+                    <div class="color-picker-container">
+                        <input type="color" id="pointerDownColor" class="color-input" value="#FF0000">
+                        <button id="resetPointerDownColor" title="Reset to default">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="ionicon" viewBox="0 0 512 512">
+                                <path d="M320 146s24.36-12-64-12a160 160 0 10160 160" fill="none" stroke="currentColor"
+                                    stroke-linecap="round" stroke-miterlimit="10" stroke-width="32" />
+                                <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                                    stroke-width="32" d="M256 58l80 80-80 80" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="settings-option">
+                <div>
+                    <h3>Pointer up color</h3>
+                    <p class="description">The color shown when the pointer is released (default: yellow).</p>
+                </div>
+                <div>
+                    <div class="color-picker-container">
+                        <input type="color" id="pointerUpColor" class="color-input" value="#FFFF00">
+                        <button id="resetPointerUpColor" title="Reset to default">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="ionicon" viewBox="0 0 512 512">
+                                <path d="M320 146s24.36-12-64-12a160 160 0 10160 160" fill="none" stroke="currentColor"
+                                    stroke-linecap="round" stroke-miterlimit="10" stroke-width="32" />
+                                <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                                    stroke-width="32" d="M256 58l80 80-80 80" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <h2>Behavior</h2>
+
+        <div class="settings-block">
+            <div class="settings-option">
+                <div>
+                    <h3>Enable maximum wait time</h3>
+                    <p class="description">
+                        By default, the extension will wait a maximum of 5 seconds for a DOM update to happen after a
+                        pointer event. If this is disabled, the extension may wait indefinitely for a DOM update if
+                        it never happens.
+                    </p>
+                </div>
+                <div>
+                    <label class="switch">
+                        <input type="checkbox" id="enableMutationTimeout" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="settings-option">
+                <div>
+                    <h3>Mutation timeout threshold (ms)</h3>
+                    <p class="description">
+                        Time that the extension will wait for DOM updates after pointer events. If no DOM updates are
+                        detected after this time, the extension will stop waiting.
+                    </p>
+                </div>
+                <div>
+                    <input type="number" id="mutationTimeoutValue" class="input-field" min="100" step="100" value="5000"
+                        placeholder="ms">
+                </div>
+            </div>
+        </div>
+
+        <!-- TODO: Remove -->
         <div class="settings-block">
             <div class="settings-option">
                 <div>
@@ -363,47 +450,7 @@
             </div>
         </div>
 
-        <div class="settings-block">
-            <div class="settings-option">
-                <div>
-                    <h3>Pointer Down Color</h3>
-                    <p class="description">The color shown when the pointer is pressed down (default: red).</p>
-                </div>
-                <div>
-                    <div class="color-picker-container">
-                        <input type="color" id="pointerDownColor" class="color-input" value="#FF0000">
-                        <button id="resetPointerDownColor" title="Reset to default">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="ionicon" viewBox="0 0 512 512">
-                                <path d="M320 146s24.36-12-64-12a160 160 0 10160 160" fill="none" stroke="currentColor"
-                                    stroke-linecap="round" stroke-miterlimit="10" stroke-width="32" />
-                                <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
-                                    stroke-width="32" d="M256 58l80 80-80 80" />
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-            </div>
-            <div class="settings-option">
-                <div>
-                    <h3>Pointer Up Color</h3>
-                    <p class="description">The color shown when the pointer is released (default: yellow).</p>
-                </div>
-                <div>
-                    <div class="color-picker-container">
-                        <input type="color" id="pointerUpColor" class="color-input" value="#FFFF00">
-                        <button id="resetPointerUpColor" title="Reset to default">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="ionicon" viewBox="0 0 512 512">
-                                <path d="M320 146s24.36-12-64-12a160 160 0 10160 160" fill="none" stroke="currentColor"
-                                    stroke-linecap="round" stroke-miterlimit="10" stroke-width="32" />
-                                <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
-                                    stroke-width="32" d="M256 58l80 80-80 80" />
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
+        <!-- TODO: Remove this save button or create one per section -->
         <div class="save-row">
             <div>
                 <p class="success-message" id="status">
