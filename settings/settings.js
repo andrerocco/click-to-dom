@@ -35,7 +35,7 @@ document.addEventListener("DOMContentLoaded", () => {
             // Set default values if settings don't exist yet
             fpsComparisonValueInput.value = result.fpsComparisonValue || 60;
             showLastContentPaintToggle.checked = result.showLastContentPaint || false;
-            timeAfterLastContentPaintInput.value = result.timeAfterLastContentPaint || 100;
+            timeAfterLastContentPaintInput.value = result.timeAfterLastContentPaint || 5000;
 
             // Set color pickers to stored values or defaults
             pointerDownColorInput.value = result.pointerDownColor || DEFAULT_POINTER_DOWN_COLOR;

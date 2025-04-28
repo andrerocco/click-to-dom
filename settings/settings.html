@@ -441,11 +441,13 @@
                     <h3>"Last Content Paint" timeout (ms)</h3>
                     <p class="description">This is the threshold value that will be used to determine the last content
                         paint. Meaning that, after a mutation, if no more mutations are detected after this time, the
-                        extension will consider that the last content paint has been reached.</p>
+                        extension will consider that the last content paint has been reached. <i>Try to keep your mouse
+                            (and keyboard) still during this time to not trigger unrelated DOM updates.</i></p>
+                    </p>
                 </div>
                 <div>
                     <input type="number" id="timeAfterLastContentPaint" class="input-field" min="0" step="10"
-                        value="100">
+                        value="5000">
                 </div>
             </div>
         </div>

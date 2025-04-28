@@ -87,22 +87,27 @@
     color: var(--next-frame-text-primary);
 }
 
-.next-frame-fps-value {
+.next-frame-stats-row {
     display: flex;
     width: 100%;
     justify-content: space-between;
     gap: 4px;
 }
 
-.next-frame-fps-time {
+.next-frame-stats-delay {
     color: #19d05c;
     white-space: nowrap;
 }
 
-.next-frame-fps-frames {
+.next-frame-stats-frames {
     color: var(--next-frame-text-secondary);
     white-space: nowrap;
     padding-left: 8px;
+}
+
+.next-frame-stats-type {
+    color: var(--next-frame-text-secondary);
+    white-space: nowrap;
 }
 
 .next-frame-stats-value {
