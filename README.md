@@ -2,7 +2,9 @@
 
 Click to DOM is a Chrome Extension that measures the time it takes for the DOM to update (First Paint, Last Content Paint) after pointer events (e.g., mouse clicks, taps).
 
-Chrome Web Store link: _soon_
+Download (Chrome Web Store): _link soon._
+
+https://github.com/user-attachments/assets/f65af4bf-0e96-480f-b40c-94173b2895e3
 
 ## Installation
 
