@@ -118,6 +118,10 @@
                 pointerdown: { firstPaint: false, lastContentPaint: false },
                 pointerup: { firstPaint: false, lastContentPaint: false },
             };
+            this.timeoutState = {
+                pointerdown: { firstPaint: false, lastContentPaint: false },
+                pointerup: { firstPaint: false, lastContentPaint: false },
+            };
 
             // Settings with default values
             this.settings = {
@@ -238,12 +242,25 @@
             console.log(`Updating stats for ${eventType} - ${paintType}: ${duration}ms`);
             this.stats[eventType][paintType] = duration;
             this.loadingState[eventType][paintType] = false;
+            this.timeoutState[eventType][paintType] = false; // Reset timeout state when updating stats
             this.render();
         }
 
         setLoadingState(eventType, paintType, isLoading) {
             console.log(`Setting loading state for ${eventType} - ${paintType}: ${isLoading}`);
             this.loadingState[eventType][paintType] = isLoading;
+            if (isLoading) {
+                this.timeoutState[eventType][paintType] = false; // Reset timeout state when loading
+            }
+            this.render();
+        }
+
+        setTimeoutState(eventType, paintType, isTimedOut) {
+            console.log(`Setting timeout state for ${eventType} - ${paintType}: ${isTimedOut}`);
+            this.timeoutState[eventType][paintType] = isTimedOut;
+            if (isTimedOut) {
+                this.loadingState[eventType][paintType] = false; // Reset loading state when timed out
+            }
             this.render();
         }
 
@@ -272,13 +289,21 @@
                     if (timeEl && framesEl) {
                         const value = this.stats[eventType][paintType];
                         const isLoading = this.loadingState[eventType][paintType];
-                        timeEl.classList.remove("next-frame-loading", "next-frame-stale");
-                        framesEl.classList.remove("next-frame-loading", "next-frame-stale");
+                        const isTimedOut = this.timeoutState[eventType][paintType];
+
+                        timeEl.classList.remove("next-frame-loading", "next-frame-stale", "next-frame-timeout-label");
+                        framesEl.classList.remove("next-frame-loading", "next-frame-stale", "next-frame-timeout-label");
+
                         if (isLoading) {
                             timeEl.textContent = "Waiting...";
                             framesEl.textContent = "";
                             timeEl.classList.add("next-frame-loading");
                             framesEl.classList.add("next-frame-loading");
+                        } else if (isTimedOut) {
+                            timeEl.textContent = "Timed out";
+                            framesEl.textContent = "";
+                            timeEl.classList.add("next-frame-timeout-label");
+                            framesEl.classList.add("next-frame-timeout-label");
                         } else if (value !== null) {
                             const roundedValue = Math.round(value);
                             timeEl.textContent = `${roundedValue}ms`;
@@ -486,8 +511,8 @@
             if (this.settings.showLastContentPaint) {
                 this.timeouts[eventType] = setTimeout(() => {
                     if (!this.hasMutated[eventType]) {
-                        this.statisticsOverlayUI.setLoadingState(eventType, "firstPaint", false);
-                        this.statisticsOverlayUI.setLoadingState(eventType, "lastContentPaint", false);
+                        this.statisticsOverlayUI.setTimeoutState(eventType, "firstPaint", true);
+                        this.statisticsOverlayUI.setTimeoutState(eventType, "lastContentPaint", true);
                         this.statisticsOverlayUI.stats[eventType].firstPaint = null;
                         this.statisticsOverlayUI.stats[eventType].lastContentPaint = null;
                     }
@@ -496,9 +521,10 @@
                 }, this.settings.timeAfterLastContentPaint);
             } else if (this.settings.enableMutationTimeout) {
                 this.timeouts[eventType] = setTimeout(() => {
+                    console.log("Mutation timeout reached, resetting observers", eventType);
                     if (this.observers[eventType]) {
                         this.resetObservers(eventType);
-                        this.statisticsOverlayUI.setLoadingState(eventType, "firstPaint", false);
+                        this.statisticsOverlayUI.setTimeoutState(eventType, "firstPaint", true);
                         this.statisticsOverlayUI.stats[eventType].firstPaint = null;
                         this.statisticsOverlayUI.render();
                     }

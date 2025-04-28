@@ -96,6 +96,9 @@
     color: #19d05c;
     white-space: nowrap;
 }
+.next-frame-stats-delay.next-frame-timeout-label {
+    color: var(--next-frame-text-secondary);
+}
 
 .next-frame-stats-frames {
     color: var(--next-frame-text-secondary);
