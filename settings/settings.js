@@ -111,29 +111,15 @@ document.addEventListener("DOMContentLoaded", () => {
                 mutationTimeoutValue,
             },
             () => {
-                // Show success message
+                // Update the status message to indicate a refresh is needed
+                saveStatus.textContent =
+                    "Settings saved. Refresh the pages where the extension is active to apply changes.";
                 saveStatus.classList.add("visible");
 
-                // Hide message after 2 seconds
+                // Hide message after 5 seconds
                 setTimeout(() => {
                     saveStatus.classList.remove("visible");
                 }, 5000);
-
-                // Notify content scripts about the setting changes
-                chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-                    if (tabs[0]) {
-                        chrome.tabs.sendMessage(tabs[0].id, {
-                            action: "settingsUpdated",
-                            settings: {
-                                fpsComparisonValue,
-                                showLastContentPaint,
-                                timeAfterLastContentPaint,
-                                enableMutationTimeout,
-                                mutationTimeoutValue,
-                            },
-                        });
-                    }
-                });
             }
         );
     });

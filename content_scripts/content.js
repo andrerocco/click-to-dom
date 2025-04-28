@@ -327,19 +327,6 @@
         isVisible() {
             return this.visible;
         }
-
-        // Method to update settings when they change
-        updateSettings(newSettings) {
-            if (newSettings) {
-                if (newSettings.fpsComparisonValue) {
-                    this.settings.fpsComparisonValue = newSettings.fpsComparisonValue;
-                }
-                if (newSettings.showLastContentPaint !== undefined) {
-                    this.settings.showLastContentPaint = newSettings.showLastContentPaint;
-                }
-                this.render();
-            }
-        }
     }
 
     // TODO: Remove for now, feature not implemented
@@ -755,18 +742,6 @@
         isRecording() {
             return this.recording;
         }
-
-        // Method to update settings when they change
-        updateSettings(newSettings) {
-            if (newSettings) {
-                if (newSettings.enableMutationTimeout !== undefined) {
-                    this.settings.enableMutationTimeout = newSettings.enableMutationTimeout;
-                }
-                if (newSettings.mutationTimeoutValue) {
-                    this.settings.mutationTimeoutValue = newSettings.mutationTimeoutValue;
-                }
-            }
-        }
     }
 
     if (window._domPaintTrackerActive) {
@@ -827,39 +802,6 @@
                         isActive: tracker.active,
                         isRecording: tracker.isRecording(),
                     });
-                    break;
-                case "settingsUpdated":
-                    if (message.settings) {
-                        // Only update statistics overlay settings which are relevant to it
-                        if (tracker.statisticsOverlayUI) {
-                            const overlaySettings = {
-                                fpsComparisonValue: message.settings.fpsComparisonValue,
-                                showLastContentPaint: message.settings.showLastContentPaint,
-                            };
-                            tracker.statisticsOverlayUI.updateSettings(overlaySettings);
-                        }
-
-                        // Update paint tracker settings
-                        if (
-                            message.settings.enableMutationTimeout !== undefined ||
-                            message.settings.mutationTimeoutValue
-                        ) {
-                            const trackerSettings = {
-                                enableMutationTimeout: message.settings.enableMutationTimeout,
-                                mutationTimeoutValue: message.settings.mutationTimeoutValue,
-                            };
-                            tracker.updateSettings(trackerSettings);
-                        }
-
-                        sendResponse({
-                            success: true,
-                        });
-                    } else {
-                        sendResponse({
-                            success: false,
-                            error: "Invalid settings",
-                        });
-                    }
                     break;
             }
             return true; // Required to use sendResponse asynchronously
