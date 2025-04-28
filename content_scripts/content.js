@@ -50,7 +50,7 @@
 
             // Create new pointer down indicator
             const element = document.createElement("div");
-            element.className = "next-frame-pointer-indicator next-frame-pointer-down";
+            element.className = "clicktodom-pointer-indicator clicktodom-pointer-down";
             element.setAttribute("data-extension-ui", "true");
             element.style.left = `${x}px`;
             element.style.top = `${y}px`;
@@ -70,7 +70,7 @@
 
             // Create new pointer up indicator with animation
             const element = document.createElement("div");
-            element.className = "next-frame-pointer-indicator next-frame-pointer-up";
+            element.className = "clicktodom-pointer-indicator clicktodom-pointer-up";
             element.setAttribute("data-extension-ui", "true");
             element.style.left = `${x}px`;
             element.style.top = `${y}px`;
@@ -138,66 +138,66 @@
 
             // Create overlay element
             const overlay = document.createElement("div");
-            overlay.className = "next-frame-stats-overlay";
+            overlay.className = "clicktodom-stats-overlay";
             overlay.setAttribute("data-extension-ui", "true"); // Mark as extension UI
             document.body.appendChild(overlay);
             this.element = overlay;
 
             // Set html content
             this.element.innerHTML = `
-                <div class="next-frame-stats-section" data-extension-ui="true">
-                    <div class="next-frame-stats-label" data-extension-ui="true">
-                        <span class="next-frame-stats-title" data-extension-ui="true">Mouse down ↓</span>
+                <div class="clicktodom-stats-section" data-extension-ui="true">
+                    <div class="clicktodom-stats-label" data-extension-ui="true">
+                        <span class="clicktodom-stats-title" data-extension-ui="true">Mouse down ↓</span>
                     </div>
-                    <div id="next-frame-pointerdown-firstpaint-delay" class="next-frame-stats-row" data-extension-ui="true">
+                    <div id="clicktodom-pointerdown-firstpaint-delay" class="clicktodom-stats-row" data-extension-ui="true">
                         <div data-extension-ui="true">    
-                            <span id="next-frame-pointerdown-time" class="next-frame-stats-delay" data-extension-ui="true">-</span>
+                            <span id="clicktodom-pointerdown-time" class="clicktodom-stats-delay clicktodom-stale" data-extension-ui="true">-</span>
                             ${
                                 this.settings.showLastContentPaint
-                                    ? `<span class="next-frame-stats-type" data-extension-ui="true"> (FP)</span>`
+                                    ? `<span class="clicktodom-stats-type" data-extension-ui="true"> (FP)</span>`
                                     : ""
                             }
                         </div>
-                        <span id="next-frame-pointerdown-frames" class="next-frame-stats-frames" data-extension-ui="true"></span>
+                        <span id="clicktodom-pointerdown-frames" class="clicktodom-stats-frames clicktodom-stale" data-extension-ui="true"></span>
                     </div>
                     ${
                         this.settings.showLastContentPaint
                             ? `
-                            <div id="next-frame-pointerdown-lastpaint-delay" class="next-frame-stats-row" data-extension-ui="true">
+                            <div id="clicktodom-pointerdown-lastpaint-delay" class="clicktodom-stats-row" data-extension-ui="true">
                                 <div>
-                                    <span id="next-frame-pointerdown-lastpaint-time" class="next-frame-stats-delay" data-extension-ui="true">-</span>
-                                    <span class="next-frame-stats-type" data-extension-ui="true"> (LCP)</span>
+                                    <span id="clicktodom-pointerdown-lastpaint-time" class="clicktodom-stats-delay clicktodom-stale" data-extension-ui="true">-</span>
+                                    <span class="clicktodom-stats-type" data-extension-ui="true"> (LCP)</span>
                                 </div>
-                                <span id="next-frame-pointerdown-lastpaint-frames" class="next-frame-stats-frames" data-extension-ui="true"></span>
+                                <span id="clicktodom-pointerdown-lastpaint-frames" class="clicktodom-stats-frames clicktodom-stale" data-extension-ui="true"></span>
                             </div>
                             `
                             : ""
                     }
                 </div>
-                <div class="next-frame-stats-section" data-extension-ui="true">
-                    <div class="next-frame-stats-label" data-extension-ui="true">
-                        <span class="next-frame-stats-title" data-extension-ui="true">Mouse up ↑</span>
+                <div class="clicktodom-stats-section" data-extension-ui="true">
+                    <div class="clicktodom-stats-label" data-extension-ui="true">
+                        <span class="clicktodom-stats-title" data-extension-ui="true">Mouse up ↑</span>
                     </div>
-                    <div id="next-frame-pointerup-firstpaint-delay" class="next-frame-stats-row" data-extension-ui="true">
+                    <div id="clicktodom-pointerup-firstpaint-delay" class="clicktodom-stats-row" data-extension-ui="true">
                         <div data-extension-ui="true">
-                            <span id="next-frame-pointerup-time" class="next-frame-stats-delay" data-extension-ui="true">-</span>
+                            <span id="clicktodom-pointerup-time" class="clicktodom-stats-delay clicktodom-stale" data-extension-ui="true">-</span>
                             ${
                                 this.settings.showLastContentPaint
-                                    ? `<span class="next-frame-stats-type" data-extension-ui="true"> (FP)</span>`
+                                    ? `<span class="clicktodom-stats-type" data-extension-ui="true"> (FP)</span>`
                                     : ""
                             }
                         </div>
-                        <span id="next-frame-pointerup-frames" class="next-frame-stats-frames" data-extension-ui="true"></span>
+                        <span id="clicktodom-pointerup-frames" class="clicktodom-stats-frames clicktodom-stale" data-extension-ui="true"></span>
                     </div>
                     ${
                         this.settings.showLastContentPaint
                             ? `
-                            <div id="next-frame-pointerup-lastpaint-delay" class="next-frame-stats-row" data-extension-ui="true">
+                            <div id="clicktodom-pointerup-lastpaint-delay" class="clicktodom-stats-row" data-extension-ui="true">
                                 <div data-extension-ui="true">
-                                    <span id="next-frame-pointerup-lastpaint-time" class="next-frame-stats-delay" data-extension-ui="true">-</span>
-                                    <span class="next-frame-stats-type" data-extension-ui="true"> (LCP)</span>
+                                    <span id="clicktodom-pointerup-lastpaint-time" class="clicktodom-stats-delay clicktodom-stale" data-extension-ui="true">-</span>
+                                    <span class="clicktodom-stats-type" data-extension-ui="true"> (LCP)</span>
                                 </div>
-                                <span id="next-frame-pointerup-lastpaint-frames" class="next-frame-stats-frames" data-extension-ui="true"></span>
+                                <span id="clicktodom-pointerup-lastpaint-frames" class="clicktodom-stats-frames clicktodom-stale" data-extension-ui="true"></span>
                             </div>
                             `
                             : ""
@@ -276,11 +276,11 @@
                     let timeElId, framesElId;
 
                     if (paintType === "firstPaint") {
-                        timeElId = `next-frame-${eventType}-time`;
-                        framesElId = `next-frame-${eventType}-frames`;
+                        timeElId = `clicktodom-${eventType}-time`;
+                        framesElId = `clicktodom-${eventType}-frames`;
                     } else {
-                        timeElId = `next-frame-${eventType}-lastpaint-time`;
-                        framesElId = `next-frame-${eventType}-lastpaint-frames`;
+                        timeElId = `clicktodom-${eventType}-lastpaint-time`;
+                        framesElId = `clicktodom-${eventType}-lastpaint-frames`;
                     }
 
                     const timeEl = this.element.querySelector(`#${timeElId}`);
@@ -291,19 +291,19 @@
                         const isLoading = this.loadingState[eventType][paintType];
                         const isTimedOut = this.timeoutState[eventType][paintType];
 
-                        timeEl.classList.remove("next-frame-loading", "next-frame-stale", "next-frame-timeout-label");
-                        framesEl.classList.remove("next-frame-loading", "next-frame-stale", "next-frame-timeout-label");
+                        timeEl.classList.remove("clicktodom-loading", "clicktodom-stale", "clicktodom-timeout-label");
+                        framesEl.classList.remove("clicktodom-loading", "clicktodom-stale", "clicktodom-timeout-label");
 
                         if (isLoading) {
                             timeEl.textContent = "Waiting...";
                             framesEl.textContent = "";
-                            timeEl.classList.add("next-frame-loading");
-                            framesEl.classList.add("next-frame-loading");
+                            timeEl.classList.add("clicktodom-loading");
+                            framesEl.classList.add("clicktodom-loading");
                         } else if (isTimedOut) {
                             timeEl.textContent = "Timed out";
                             framesEl.textContent = "";
-                            timeEl.classList.add("next-frame-timeout-label");
-                            framesEl.classList.add("next-frame-timeout-label");
+                            timeEl.classList.add("clicktodom-timeout-label");
+                            framesEl.classList.add("clicktodom-timeout-label");
                         } else if (value !== null) {
                             const roundedValue = Math.round(value);
                             timeEl.textContent = `${roundedValue}ms`;
@@ -316,8 +316,8 @@
                         } else {
                             timeEl.textContent = "-";
                             framesEl.textContent = "";
-                            timeEl.classList.add("next-frame-stale");
-                            framesEl.classList.add("next-frame-stale");
+                            timeEl.classList.add("clicktodom-stale");
+                            framesEl.classList.add("clicktodom-stale");
                         }
                     } else {
                         console.log(`Element not found for ${eventType} - ${paintType}`);

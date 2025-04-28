@@ -1,10 +1,10 @@
 :root {
-    --next-frame-text-primary: #fff;
-    --next-frame-text-secondary: #9b9b9b;
+    --clicktodom-text-primary: #fff;
+    --clicktodom-text-secondary: #9b9b9b;
 }
 
 /* Pointer Indicator Styles */
-.next-frame-pointer-indicator {
+.clicktodom-pointer-indicator {
     position: fixed;
     border-radius: 50%;
     pointer-events: none;
@@ -14,13 +14,13 @@
     opacity: 0.7;
 }
 
-.next-frame-pointer-down {
+.clicktodom-pointer-down {
     background-color: #0066ff; /* Red */
     width: 15px;
     height: 15px;
 }
 
-.next-frame-pointer-up {
+.clicktodom-pointer-up {
     background-color: #ffff00; /* Yellow */
     width: 25px;
     height: 25px;
@@ -39,7 +39,7 @@
 }
 
 /* Statistics Overlay Styles - Updated to match Tailwind design */
-.next-frame-stats-overlay {
+.clicktodom-stats-overlay {
     z-index: 999998;
     position: fixed;
     top: 20px;
@@ -60,58 +60,58 @@
 }
 
 @supports ((-webkit-backdrop-filter: blur(16px)) or (backdrop-filter: blur(16px))) {
-    .next-frame-stats-overlay {
+    .clicktodom-stats-overlay {
         background-color: #222b;
         -webkit-backdrop-filter: blur(16px);
         backdrop-filter: blur(16px);
     }
 }
 
-.next-frame-stats-section {
+.clicktodom-stats-section {
     padding: 10px;
 }
 
-.next-frame-stats-section + .next-frame-stats-section {
+.clicktodom-stats-section + .clicktodom-stats-section {
     padding-top: 0;
 }
 
-.next-frame-stats-label {
+.clicktodom-stats-label {
     display: flex;
     width: 100%;
     margin-bottom: 0.25rem; /* part of space-y-1 */
 }
 
-.next-frame-stats-title {
-    color: var(--next-frame-text-primary);
+.clicktodom-stats-title {
+    color: var(--clicktodom-text-primary);
 }
 
-.next-frame-stats-row {
+.clicktodom-stats-row {
     display: flex;
     width: 100%;
     justify-content: space-between;
     gap: 4px;
 }
 
-.next-frame-stats-delay {
+.clicktodom-stats-delay {
     color: #19d05c;
     white-space: nowrap;
 }
-.next-frame-stats-delay.next-frame-timeout-label {
-    color: var(--next-frame-text-secondary);
+.clicktodom-stats-delay.clicktodom-timeout-label {
+    color: var(--clicktodom-text-secondary);
 }
 
-.next-frame-stats-frames {
-    color: var(--next-frame-text-secondary);
+.clicktodom-stats-frames {
+    color: var(--clicktodom-text-secondary);
     white-space: nowrap;
     padding-left: 8px;
 }
 
-.next-frame-stats-type {
-    color: var(--next-frame-text-secondary);
+.clicktodom-stats-type {
+    color: var(--clicktodom-text-secondary);
     white-space: nowrap;
 }
 
-.next-frame-stats-value {
+.clicktodom-stats-value {
     color: #19d05c; /* TODO: Make these change color based on the delay (change on content.js) */
 }
 
@@ -128,11 +128,11 @@
     }
 }
 
-.next-frame-loading {
+.clicktodom-loading {
     animation: pulse 1.2s ease-in-out infinite;
     color: #ffa500 !important; /* Orange color for loading state */
 }
 
-.next-frame-stale {
-    color: var(--next-frame-text-secondary);
+.clicktodom-stale {
+    color: var(--clicktodom-text-secondary);
 }
