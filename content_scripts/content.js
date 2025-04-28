@@ -302,145 +302,9 @@
         }
     }
 
-    // TODO: Remove for now, feature not implemented
-    class Storage {
-        static getStorageKey() {
-            return `interactions_${window.location.origin}`;
-        }
-
-        static async saveInteraction(interaction) {
-            try {
-                const storageKey = this.getStorageKey();
-
-                return new Promise((resolve, reject) => {
-                    chrome.storage.local.get([storageKey], (result) => {
-                        const existingData = result[storageKey] || [];
-                        const updatedData = [...existingData, interaction];
-
-                        chrome.storage.local.set({ [storageKey]: updatedData }, () => {
-                            console.log(`Interaction ${interaction.id} saved to storage`);
-                            resolve();
-                        });
-                    });
-                });
-            } catch (error) {
-                console.error("Error saving interaction:", error);
-                throw error;
-            }
-        }
-    }
-
-    /**
-     * Represents a single interaction event (click, tap, etc.)
-     * Groups related pointer events together and handles persistence
-     */
-    class InteractionEvent {
-        constructor(element, page) {
-            this.id = Date.now() + "-" + Math.random().toString(36).substr(2, 9); // Unique ID
-            this.timestamp = Date.now();
-            this.element = this.getElementInfo(element); // Element info
-            this.fromPage = { ...page }; // Current page when interaction started
-            this.toPage = null; // Will be populated if navigation happens
-            this.interactionDelays = {
-                pointerdown: null,
-                pointerup: null,
-            };
-            this.complete = false; // Marks when the interaction is fully recorded
-            this.saved = false; // Tracks if this interaction has been saved to storage
-        }
-
-        getElementInfo(element) {
-            if (!element) return null;
-
-            // Create a useful description of the element
-            const tagName = element.tagName?.toLowerCase() || "unknown";
-            const id = element.id ? `#${element.id}` : "";
-
-            // Handle className safely (can be string or DOMTokenList for SVG elements)
-            let classStr = "";
-            if (element.className) {
-                if (typeof element.className === "string") {
-                    classStr = element.className ? `.${element.className.replace(/\s+/g, ".")}` : "";
-                } else if (element.className.baseVal !== undefined) {
-                    // SVG elements have className.baseVal
-                    classStr = element.className.baseVal ? `.${element.className.baseVal.replace(/\s+/g, ".")}` : "";
-                } else if (typeof element.className.value === "string") {
-                    classStr = element.className.value ? `.${element.className.value.replace(/\s+/g, ".")}` : "";
-                } else if (element.classList && element.classList.length) {
-                    // Use classList as fallback
-                    classStr = `.${Array.from(element.classList).join(".")}`;
-                }
-            }
-
-            // Safely get text content
-            const text = (element.textContent || "").trim().substring(0, 50);
-
-            return {
-                selector: `${tagName}${id}${classStr}`,
-                text: text,
-                role: element.getAttribute("role") || null,
-                type: element.getAttribute("type") || null,
-            };
-        }
-
-        updateDelay(eventType, duration) {
-            this.interactionDelays[eventType] = duration;
-
-            // Consider the interaction complete if we have pointerup data
-            if (eventType === "pointerup") {
-                this.complete = true;
-                this.save(); // Auto-save when complete
-            }
-
-            return this;
-        }
-
-        checkForNavigation(currentPage) {
-            // Check if the URL has changed from when this interaction started
-            if (this.fromPage.url !== currentPage.url) {
-                this.recordNavigation(currentPage);
-                return true;
-            }
-            return false;
-        }
-
-        recordNavigation(toPage) {
-            this.toPage = { ...toPage };
-            this.complete = true; // Consider the interaction complete when navigation occurs
-            this.save(); // Auto-save when navigation occurs
-            return this;
-        }
-
-        async save() {
-            if (this.saved) return;
-
-            try {
-                await Storage.saveInteraction(this.toJSON());
-                this.saved = true;
-                console.log(`Interaction ${this.id} saved`);
-            } catch (error) {
-                console.error(`Failed to save interaction ${this.id}:`, error);
-            }
-        }
-
-        toJSON() {
-            return {
-                id: this.id,
-                timestamp: this.timestamp,
-                element: this.element,
-                fromPage: this.fromPage,
-                toPage: this.toPage,
-                interactionDelays: this.interactionDelays,
-                complete: this.complete,
-            };
-        }
-    }
-
     class DOMPaintTracker {
         constructor() {
             this.active = false;
-            this.recording = false;
-            this.currentInteraction = null;
             this.observers = {};
             this.timeouts = {};
             this.startTimes = {};
@@ -582,10 +446,6 @@
                     this.hasMutated[eventType] = true;
                     const firstPaintDuration = now - startTime;
                     this.statisticsOverlayUI.updateStats(eventType, "firstPaint", firstPaintDuration);
-
-                    if (this.recording && this.currentInteraction) {
-                        this.currentInteraction.updateDelay(eventType, firstPaintDuration);
-                    }
                 }
 
                 // Stores the last mutation time
@@ -600,15 +460,6 @@
                     this.timeouts[eventType] = setTimeout(() => {
                         const lastContentPaintDuration = this.lastMutationTimes[eventType] - startTime;
                         this.statisticsOverlayUI.updateStats(eventType, "lastContentPaint", lastContentPaintDuration);
-
-                        if (this.recording && this.currentInteraction) {
-                            this.currentInteraction.updateDelay(eventType, lastContentPaintDuration);
-                            if (eventType === "pointerup") {
-                                this.currentInteraction.complete = true;
-                                this.currentInteraction.save();
-                                this.currentInteraction = null;
-                            }
-                        }
 
                         observer.disconnect();
                         delete this.observers[eventType];
@@ -674,15 +525,6 @@
             this.clearTimeouts();
             this.pointerIndicatorUI.showPointerDown(event.clientX, event.clientY);
 
-            if (this.recording) {
-                this.currentInteraction = new InteractionEvent(event.target, {
-                    url: window.location.href,
-                    pathname: window.location.pathname,
-                    title: document.title,
-                });
-                console.log(`New interaction started: ${this.currentInteraction.id}`);
-            }
-
             this.calculateUpdate(event.type);
         }
 
@@ -711,7 +553,6 @@
             document.removeEventListener("pointerdown", this.handlePointerDown, true);
             document.removeEventListener("pointerup", this.handlePointerUp, true);
             this.active = false;
-            this.stopRecording();
             this.resetObservers();
             this.clearTimeouts();
 
@@ -724,30 +565,8 @@
             console.log("Tracker event listeners deactivated");
         }
 
-        startRecording() {
-            if (!this.active || this.recording) return false;
-
-            this.recording = true;
-            console.log("Started recording interactions");
-            return true;
-        }
-
-        stopRecording() {
-            if (!this.recording) return;
-
-            this.recording = false;
-
-            if (this.currentInteraction) {
-                this.currentInteraction.complete = true;
-                this.currentInteraction.save();
-                this.currentInteraction = null;
-            }
-
-            console.log("Stopped recording interactions");
-        }
-
-        isRecording() {
-            return this.recording;
+        isActive() {
+            return this.active;
         }
     }
 
@@ -776,7 +595,6 @@
                     sendResponse({
                         success: true,
                         isActive: true,
-                        isRecording: tracker.isRecording(),
                     });
                     break;
                 case "deactivate":
@@ -784,30 +602,12 @@
                     sendResponse({
                         success: true,
                         isActive: false,
-                        isRecording: false,
-                    });
-                    break;
-                case "startRecording":
-                    const started = tracker.startRecording();
-                    sendResponse({
-                        success: started,
-                        isActive: tracker.active,
-                        isRecording: tracker.isRecording(),
-                    });
-                    break;
-                case "stopRecording":
-                    tracker.stopRecording();
-                    sendResponse({
-                        success: true,
-                        isActive: tracker.active,
-                        isRecording: false,
                     });
                     break;
                 case "getState":
                     sendResponse({
                         success: true,
-                        isActive: tracker.active,
-                        isRecording: tracker.isRecording(),
+                        isActive: tracker.isActive(),
                     });
                     break;
             }
