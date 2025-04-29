@@ -53,7 +53,7 @@ document.addEventListener("DOMContentLoaded", () => {
             // Set default values if settings don't exist yet
             fpsComparisonValueInput.value = result.fpsComparisonValue || 60;
             showLastContentPaintToggle.checked = result.showLastContentPaint || false;
-            timeAfterLastContentPaintInput.value = result.timeAfterLastContentPaint || 5000;
+            timeAfterLastContentPaintInput.value = result.timeAfterLastContentPaint || 3000;
 
             // Set color pickers to stored values or defaults
             pointerDownColorInput.value = result.pointerDownColor || DEFAULT_POINTER_DOWN_COLOR;
@@ -111,7 +111,7 @@ document.addEventListener("DOMContentLoaded", () => {
         statusElement.classList.add("visible");
         setTimeout(() => {
             statusElement.classList.remove("visible");
-        }, 5000);
+        }, 3000);
     };
 
     // Save behavior settings when behavior save button is clicked

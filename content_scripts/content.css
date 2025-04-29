@@ -59,6 +59,10 @@
     margin: 32px;
 }
 
+.clicktodom-stats-overlay.clicktodom-show-lastpaint {
+    width: 230px;
+}
+
 @supports ((-webkit-backdrop-filter: blur(16px)) or (backdrop-filter: blur(16px))) {
     .clicktodom-stats-overlay {
         background-color: #222b;

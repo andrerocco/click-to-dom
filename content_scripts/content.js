@@ -15,7 +15,7 @@
             const result = await chrome.storage.sync.get(keys);
             return keys.length > 1 ? result : result[keys[0]] || null;
         } catch (error) {
-            console.error(`Error getting setting ${keys}:`, error);
+            // console.error(`Error getting setting ${keys}:`, error);
             return null;
         }
     }
@@ -38,7 +38,7 @@
         }
 
         showPointerDown(x, y) {
-            console.log("Showing pointer down indicator at", x, y);
+            // console.log("Showing pointer down indicator at", x, y);
             // Clear any existing timeout
             if (this.removeTimeout) {
                 clearTimeout(this.removeTimeout);
@@ -146,18 +146,20 @@
             this.settings.emptyStateLabel = settings?.emptyStateLabel || this.settings.emptyStateLabel;
             this.settings.loadingStateLabel = settings?.loadingStateLabel || this.settings.loadingStateLabel;
             this.settings.timeoutStateLabel = settings?.timeoutStateLabel || this.settings.timeoutStateLabel;
-            console.log("StatisticsOverlayUI Settings loaded:", this.settings);
 
             // Create overlay element
             const overlay = document.createElement("div");
             overlay.className = "clicktodom-stats-overlay";
+            if (this.settings.showLastContentPaint) {
+                overlay.classList.add("clicktodom-show-lastpaint");
+            }
             overlay.setAttribute("data-extension-ui", "true"); // Mark as extension UI
             document.body.appendChild(overlay);
             this.element = overlay;
 
             // Set html content with custom empty state label
             this.element.innerHTML = `
-                <div class="clicktodom-stats-section" data-extension-ui="true">
+                <div class="clicktodom-stats-section" data-extension-ui="true" >
                     <div class="clicktodom-stats-label" data-extension-ui="true">
                         <span class="clicktodom-stats-title" data-extension-ui="true">Mouse down ↓</span>
                     </div>
@@ -251,11 +253,11 @@
                 this.element = null;
             }
         }
-
+        "";
         updateStats(eventType, paintType, duration) {
             if (!this.element || typeof duration !== "number") return;
 
-            console.log(`Updating stats for ${eventType} - ${paintType}: ${duration}ms`);
+            // console.log(`Updating stats for ${eventType} - ${paintType}: ${duration}ms`);
             this.stats[eventType][paintType] = duration;
             this.loadingState[eventType][paintType] = false;
             this.timeoutState[eventType][paintType] = false; // Reset timeout state when updating stats
@@ -263,7 +265,7 @@
         }
 
         setLoadingState(eventType, paintType, isLoading) {
-            console.log(`Setting loading state for ${eventType} - ${paintType}: ${isLoading}`);
+            // console.log(`Setting loading state for ${eventType} - ${paintType}: ${isLoading}`);
             this.loadingState[eventType][paintType] = isLoading;
             if (isLoading) {
                 this.timeoutState[eventType][paintType] = false; // Reset timeout state when loading
@@ -272,7 +274,7 @@
         }
 
         setTimeoutState(eventType, paintType, isTimedOut) {
-            console.log(`Setting timeout state for ${eventType} - ${paintType}: ${isTimedOut}`);
+            // console.log(`Setting timeout state for ${eventType} - ${paintType}: ${isTimedOut}`);
             this.timeoutState[eventType][paintType] = isTimedOut;
             if (isTimedOut) {
                 this.loadingState[eventType][paintType] = false; // Reset loading state when timed out
@@ -281,7 +283,6 @@
         }
 
         render() {
-            console.log("Rendering overlay");
             if (!this.element) return;
 
             ["pointerdown", "pointerup"].forEach((eventType) => {
@@ -335,8 +336,6 @@
                             timeEl.classList.add("clicktodom-stale");
                             framesEl.classList.add("clicktodom-stale");
                         }
-                    } else {
-                        console.log(`Element not found for ${eventType} - ${paintType}`);
                     }
                 });
             });
@@ -386,7 +385,7 @@
                 this.settings.showLastContentPaint = settings.showLastContentPaint || false;
                 this.settings.timeAfterLastContentPaint = settings.timeAfterLastContentPaint || 1000; // Default to 1s
             }
-            console.log("DOMPaintTracker Settings loaded:", this.settings);
+            // console.log("DOMPaintTracker Settings loaded:", this.settings);
         }
 
         resetObservers(key) {
@@ -523,28 +522,29 @@
                 characterData: true,
             });
 
-            // Set up timeout handlers for no-mutation cases.
-            if (this.settings.showLastContentPaint) {
-                this.timeouts[eventType] = setTimeout(() => {
+            // Timeout handlers for no-mutation cases
+            if (this.settings.enableMutationTimeout) {
+                this.timeouts[`${eventType}_fp`] = setTimeout(() => {
                     if (!this.hasMutated[eventType]) {
                         this.statisticsOverlayUI.setTimeoutState(eventType, "firstPaint", true);
-                        this.statisticsOverlayUI.setTimeoutState(eventType, "lastContentPaint", true);
                         this.statisticsOverlayUI.stats[eventType].firstPaint = null;
+                    }
+                    // Conditionally disconnect the observer (so that the timeout time set to)
+                    if (!this.settings.showLastContentPaint) {
+                        observer.disconnect();
+                        delete this.observers[eventType];
+                    }
+                }, this.settings.mutationTimeoutValue);
+            }
+            if (this.settings.showLastContentPaint) {
+                this.timeouts[`${eventType}_lcp`] = setTimeout(() => {
+                    if (!this.hasMutated[eventType]) {
+                        this.statisticsOverlayUI.setTimeoutState(eventType, "lastContentPaint", true);
                         this.statisticsOverlayUI.stats[eventType].lastContentPaint = null;
                     }
                     observer.disconnect();
                     delete this.observers[eventType];
                 }, this.settings.timeAfterLastContentPaint);
-            } else if (this.settings.enableMutationTimeout) {
-                this.timeouts[eventType] = setTimeout(() => {
-                    console.log("Mutation timeout reached, resetting observers", eventType);
-                    if (this.observers[eventType]) {
-                        this.resetObservers(eventType);
-                        this.statisticsOverlayUI.setTimeoutState(eventType, "firstPaint", true);
-                        this.statisticsOverlayUI.stats[eventType].firstPaint = null;
-                        this.statisticsOverlayUI.render();
-                    }
-                }, this.settings.mutationTimeoutValue);
             }
         }
 
@@ -586,7 +586,6 @@
             document.addEventListener("pointerdown", this.handlePointerDown, true);
             document.addEventListener("pointerup", this.handlePointerUp, true);
             this.statisticsOverlayUI.mount();
-            console.log("Tracker event listeners activated");
         }
 
         deactivate() {
@@ -601,8 +600,6 @@
             // Unmount the overlay and pointer indicator
             this.statisticsOverlayUI.unmount();
             this.pointerIndicatorUI.unmount();
-
-            console.log("Tracker event listeners deactivated");
         }
 
         isActive() {
@@ -611,7 +608,7 @@
     }
 
     if (window._domPaintTrackerActive) {
-        console.log("DOMPaintTracker already initialized, not loading again");
+        // console.log("DOMPaintTracker already initialized, not loading again");
     } else {
         window._domPaintTrackerActive = true; // Global flag to prevent multiple instances
 
@@ -626,7 +623,7 @@
         });
 
         chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-            console.log("Message received:", message.action);
+            // console.log("Message received:", message.action);
 
             switch (message.action) {
                 case "activate":
