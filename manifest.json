@@ -14,8 +14,7 @@
         "default_title": "Click to DOM (Click to toggle, Right-click to settings)"
     },
     "background": {
-        "service_worker": "background/background.js",
-        "type": "module"
+        "service_worker": "background/background.js"
     },
     "options_page": "settings/settings.html",
     "content_scripts": [
