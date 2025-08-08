@@ -25,7 +25,7 @@
             this.currentIndicator = null;
             this.removeTimeout = null;
 
-            // Settings // TODO: Check if this code is stupid
+            // Settings
             const loadSettings = async () => {
                 this.settings.pointerDownColor = await getExtensionSettings("pointerDownColor");
                 this.settings.pointerUpColor = await getExtensionSettings("pointerUpColor");
@@ -102,8 +102,8 @@
 
             // UI data
             this.stats = {
-                pointerdown: { firstPaint: null, lastContentPaint: null },
-                pointerup: { firstPaint: null, lastContentPaint: null },
+                pointerdown: { firstDomUpdate: null, lastDomUpdate: null },
+                pointerup: { firstDomUpdate: null, lastDomUpdate: null },
             };
 
             // UI state
@@ -115,18 +115,18 @@
                 startTop: 0,
             };
             this.loadingState = {
-                pointerdown: { firstPaint: false, lastContentPaint: false },
-                pointerup: { firstPaint: false, lastContentPaint: false },
+                pointerdown: { firstDomUpdate: false, lastDomUpdate: false },
+                pointerup: { firstDomUpdate: false, lastDomUpdate: false },
             };
             this.timeoutState = {
-                pointerdown: { firstPaint: false, lastContentPaint: false },
-                pointerup: { firstPaint: false, lastContentPaint: false },
+                pointerdown: { firstDomUpdate: false, lastDomUpdate: false },
+                pointerup: { firstDomUpdate: false, lastDomUpdate: false },
             };
 
             // Settings with default values
             this.settings = {
                 fpsComparisonValue: 60,
-                showLastContentPaint: false,
+                showLastDomUpdate: false,
                 emptyStateLabel: "-",
                 loadingStateLabel: "Waiting...",
                 timeoutStateLabel: "Timed out",
@@ -136,13 +136,13 @@
         async mount() {
             const settings = await getExtensionSettings(
                 "fpsComparisonValue",
-                "showLastContentPaint",
+                "showLastDomUpdate",
                 "emptyStateLabel",
                 "loadingStateLabel",
                 "timeoutStateLabel"
             );
             this.settings.fpsComparisonValue = settings?.fpsComparisonValue || this.settings.fpsComparisonValue;
-            this.settings.showLastContentPaint = settings?.showLastContentPaint || this.settings.showLastContentPaint;
+            this.settings.showLastDomUpdate = settings?.showLastDomUpdate || this.settings.showLastDomUpdate;
             this.settings.emptyStateLabel = settings?.emptyStateLabel || this.settings.emptyStateLabel;
             this.settings.loadingStateLabel = settings?.loadingStateLabel || this.settings.loadingStateLabel;
             this.settings.timeoutStateLabel = settings?.timeoutStateLabel || this.settings.timeoutStateLabel;
@@ -150,8 +150,8 @@
             // Create overlay element
             const overlay = document.createElement("div");
             overlay.className = "clicktodom-stats-overlay";
-            if (this.settings.showLastContentPaint) {
-                overlay.classList.add("clicktodom-show-lastpaint");
+            if (this.settings.showLastDomUpdate) {
+                overlay.classList.add("clicktodom-show-lastupdate");
             }
             overlay.setAttribute("data-extension-ui", "true"); // Mark as extension UI
             document.body.appendChild(overlay);
@@ -163,28 +163,28 @@
                     <div class="clicktodom-stats-label" data-extension-ui="true">
                         <span class="clicktodom-stats-title" data-extension-ui="true">Mouse down ↓</span>
                     </div>
-                    <div id="clicktodom-pointerdown-firstpaint-delay" class="clicktodom-stats-row" data-extension-ui="true">
+                    <div id="clicktodom-pointerdown-firstupdate-delay" class="clicktodom-stats-row" data-extension-ui="true">
                         <div data-extension-ui="true">    
                             <span id="clicktodom-pointerdown-time" class="clicktodom-stats-delay clicktodom-stale" data-extension-ui="true">${
                                 this.settings.emptyStateLabel
                             }</span>
                             ${
-                                this.settings.showLastContentPaint
-                                    ? `<span class="clicktodom-stats-type" data-extension-ui="true"> (FP)</span>`
+                                this.settings.showLastDomUpdate
+                                    ? `<span class="clicktodom-stats-type" data-extension-ui="true" title="First DOM Update"> (FDU)</span>`
                                     : ""
                             }
                         </div>
                         <span id="clicktodom-pointerdown-frames" class="clicktodom-stats-frames clicktodom-stale" data-extension-ui="true"></span>
                     </div>
                     ${
-                        this.settings.showLastContentPaint
+                        this.settings.showLastDomUpdate
                             ? `
-                            <div id="clicktodom-pointerdown-lastpaint-delay" class="clicktodom-stats-row" data-extension-ui="true">
+                            <div id="clicktodom-pointerdown-lastupdate-delay" class="clicktodom-stats-row" data-extension-ui="true">
                                 <div>
-                                    <span id="clicktodom-pointerdown-lastpaint-time" class="clicktodom-stats-delay clicktodom-stale" data-extension-ui="true">${this.settings.emptyStateLabel}</span>
-                                    <span class="clicktodom-stats-type" data-extension-ui="true"> (LCP)</span>
+                                    <span id="clicktodom-pointerdown-lastupdate-time" class="clicktodom-stats-delay clicktodom-stale" data-extension-ui="true">${this.settings.emptyStateLabel}</span>
+                                    <span class="clicktodom-stats-type" data-extension-ui="true" title="Last DOM Update"> (LDU)</span>
                                 </div>
-                                <span id="clicktodom-pointerdown-lastpaint-frames" class="clicktodom-stats-frames clicktodom-stale" data-extension-ui="true"></span>
+                                <span id="clicktodom-pointerdown-lastupdate-frames" class="clicktodom-stats-frames clicktodom-stale" data-extension-ui="true"></span>
                             </div>
                             `
                             : ""
@@ -194,28 +194,28 @@
                     <div class="clicktodom-stats-label" data-extension-ui="true">
                         <span class="clicktodom-stats-title" data-extension-ui="true">Mouse up ↑</span>
                     </div>
-                    <div id="clicktodom-pointerup-firstpaint-delay" class="clicktodom-stats-row" data-extension-ui="true">
+                    <div id="clicktodom-pointerup-firstupdate-delay" class="clicktodom-stats-row" data-extension-ui="true">
                         <div data-extension-ui="true">
                             <span id="clicktodom-pointerup-time" class="clicktodom-stats-delay clicktodom-stale" data-extension-ui="true">${
                                 this.settings.emptyStateLabel
                             }</span>
                             ${
-                                this.settings.showLastContentPaint
-                                    ? `<span class="clicktodom-stats-type" data-extension-ui="true"> (FP)</span>`
+                                this.settings.showLastDomUpdate
+                                    ? `<span class="clicktodom-stats-type" data-extension-ui="true" title="First DOM Update"> (FDU)</span>`
                                     : ""
                             }
                         </div>
                         <span id="clicktodom-pointerup-frames" class="clicktodom-stats-frames clicktodom-stale" data-extension-ui="true"></span>
                     </div>
                     ${
-                        this.settings.showLastContentPaint
+                        this.settings.showLastDomUpdate
                             ? `
-                            <div id="clicktodom-pointerup-lastpaint-delay" class="clicktodom-stats-row" data-extension-ui="true">
+                            <div id="clicktodom-pointerup-lastupdate-delay" class="clicktodom-stats-row" data-extension-ui="true">
                                 <div data-extension-ui="true">
-                                    <span id="clicktodom-pointerup-lastpaint-time" class="clicktodom-stats-delay clicktodom-stale" data-extension-ui="true">${this.settings.emptyStateLabel}</span>
-                                    <span class="clicktodom-stats-type" data-extension-ui="true"> (LCP)</span>
+                                    <span id="clicktodom-pointerup-lastupdate-time" class="clicktodom-stats-delay clicktodom-stale" data-extension-ui="true">${this.settings.emptyStateLabel}</span>
+                                    <span class="clicktodom-stats-type" data-extension-ui="true" title="Last DOM Update"> (LDU)</span>
                                 </div>
-                                <span id="clicktodom-pointerup-lastpaint-frames" class="clicktodom-stats-frames clicktodom-stale" data-extension-ui="true"></span>
+                                <span id="clicktodom-pointerup-lastupdate-frames" class="clicktodom-stats-frames clicktodom-stale" data-extension-ui="true"></span>
                             </div>
                             `
                             : ""
@@ -254,30 +254,30 @@
             }
         }
         "";
-        updateStats(eventType, paintType, duration) {
+        updateStats(eventType, updateType, duration) {
             if (!this.element || typeof duration !== "number") return;
 
-            // console.log(`Updating stats for ${eventType} - ${paintType}: ${duration}ms`);
-            this.stats[eventType][paintType] = duration;
-            this.loadingState[eventType][paintType] = false;
-            this.timeoutState[eventType][paintType] = false; // Reset timeout state when updating stats
+            // console.log(`Updating stats for ${eventType} - ${updateType}: ${duration}ms`);
+            this.stats[eventType][updateType] = duration;
+            this.loadingState[eventType][updateType] = false;
+            this.timeoutState[eventType][updateType] = false; // Reset timeout state when updating stats
             this.render();
         }
 
-        setLoadingState(eventType, paintType, isLoading) {
-            // console.log(`Setting loading state for ${eventType} - ${paintType}: ${isLoading}`);
-            this.loadingState[eventType][paintType] = isLoading;
+        setLoadingState(eventType, updateType, isLoading) {
+            // console.log(`Setting loading state for ${eventType} - ${updateType}: ${isLoading}`);
+            this.loadingState[eventType][updateType] = isLoading;
             if (isLoading) {
-                this.timeoutState[eventType][paintType] = false; // Reset timeout state when loading
+                this.timeoutState[eventType][updateType] = false; // Reset timeout state when loading
             }
             this.render();
         }
 
-        setTimeoutState(eventType, paintType, isTimedOut) {
-            // console.log(`Setting timeout state for ${eventType} - ${paintType}: ${isTimedOut}`);
-            this.timeoutState[eventType][paintType] = isTimedOut;
+        setTimeoutState(eventType, updateType, isTimedOut) {
+            // console.log(`Setting timeout state for ${eventType} - ${updateType}: ${isTimedOut}`);
+            this.timeoutState[eventType][updateType] = isTimedOut;
             if (isTimedOut) {
-                this.loadingState[eventType][paintType] = false; // Reset loading state when timed out
+                this.loadingState[eventType][updateType] = false; // Reset loading state when timed out
             }
             this.render();
         }
@@ -286,27 +286,27 @@
             if (!this.element) return;
 
             ["pointerdown", "pointerup"].forEach((eventType) => {
-                ["firstPaint", "lastContentPaint"].forEach((paintType) => {
-                    if (paintType === "lastContentPaint" && !this.settings.showLastContentPaint) return;
+                ["firstDomUpdate", "lastDomUpdate"].forEach((updateType) => {
+                    if (updateType === "lastDomUpdate" && !this.settings.showLastDomUpdate) return;
 
                     // Corrected selector to match the HTML structure
                     let timeElId, framesElId;
 
-                    if (paintType === "firstPaint") {
+                    if (updateType === "firstDomUpdate") {
                         timeElId = `clicktodom-${eventType}-time`;
                         framesElId = `clicktodom-${eventType}-frames`;
                     } else {
-                        timeElId = `clicktodom-${eventType}-lastpaint-time`;
-                        framesElId = `clicktodom-${eventType}-lastpaint-frames`;
+                        timeElId = `clicktodom-${eventType}-lastupdate-time`;
+                        framesElId = `clicktodom-${eventType}-lastupdate-frames`;
                     }
 
                     const timeEl = this.element.querySelector(`#${timeElId}`);
                     const framesEl = this.element.querySelector(`#${framesElId}`);
 
                     if (timeEl && framesEl) {
-                        const value = this.stats[eventType][paintType];
-                        const isLoading = this.loadingState[eventType][paintType];
-                        const isTimedOut = this.timeoutState[eventType][paintType];
+                        const value = this.stats[eventType][updateType];
+                        const isLoading = this.loadingState[eventType][updateType];
+                        const isTimedOut = this.timeoutState[eventType][updateType];
 
                         timeEl.classList.remove("clicktodom-loading", "clicktodom-stale", "clicktodom-timeout-label");
                         framesEl.classList.remove("clicktodom-loading", "clicktodom-stale", "clicktodom-timeout-label");
@@ -342,7 +342,7 @@
         }
     }
 
-    class DOMPaintTracker {
+    class DOMUpdateTracker {
         constructor() {
             this.active = false;
             this.observers = {};
@@ -355,8 +355,8 @@
             this.settings = {
                 enableMutationTimeout: true,
                 mutationTimeoutValue: 2500,
-                showLastContentPaint: false,
-                timeAfterLastContentPaint: 1000,
+                showLastDomUpdate: false,
+                timeAfterLastDomUpdate: 1000,
             };
 
             // Bind the event handlers to preserve context
@@ -375,17 +375,17 @@
             const settings = await getExtensionSettings(
                 "enableMutationTimeout",
                 "mutationTimeoutValue",
-                "showLastContentPaint",
-                "timeAfterLastContentPaint"
+                "showLastDomUpdate",
+                "timeAfterLastDomUpdate"
             );
 
             if (settings) {
                 this.settings.enableMutationTimeout = settings.enableMutationTimeout !== false; // Default to true
                 this.settings.mutationTimeoutValue = settings.mutationTimeoutValue || 2500;
-                this.settings.showLastContentPaint = settings.showLastContentPaint || false;
-                this.settings.timeAfterLastContentPaint = settings.timeAfterLastContentPaint || 1000; // Default to 1s
+                this.settings.showLastDomUpdate = settings.showLastDomUpdate || false;
+                this.settings.timeAfterLastDomUpdate = settings.timeAfterLastDomUpdate || 1000; // Default to 1s
             }
-            // console.log("DOMPaintTracker Settings loaded:", this.settings);
+            // console.log("DOMUpdateTracker Settings loaded:", this.settings);
         }
 
         resetObservers(key) {
@@ -446,7 +446,7 @@
          * This method sets up mutation observers to measure the time between
          * the pointer event and the first/last DOM updates.
          *
-         * It handles both first paint (initial DOM change) and last content paint
+         * It handles both first DOM update (initial DOM change) and last DOM update
          * (final DOM change after a settling period), updating the UI accordingly.
          *
          * @param {string} eventType - The type of event ('pointerdown' or 'pointerup')
@@ -460,16 +460,16 @@
             this.lastMutationTimes[eventType] = null;
 
             // Initialize UI loading states
-            this.statisticsOverlayUI.setLoadingState(eventType, "firstPaint", true);
-            if (this.settings.showLastContentPaint) {
-                this.statisticsOverlayUI.setLoadingState(eventType, "lastContentPaint", true);
+            this.statisticsOverlayUI.setLoadingState(eventType, "firstDomUpdate", true);
+            if (this.settings.showLastDomUpdate) {
+                this.statisticsOverlayUI.setLoadingState(eventType, "lastDomUpdate", true);
             }
 
             this.resetObservers(eventType);
             this.clearTimeouts(eventType);
 
-            // MutationObserver callback handles DOM changes: Tracks first paint timing
-            // and optionally last content paint.
+            // MutationObserver callback handles DOM changes: Tracks first DOM update timing
+            // and optionally last DOM update.
             const observer = new MutationObserver((mutations) => {
                 // TODO: Check if that is being used at all
                 if (!this.active) {
@@ -481,31 +481,31 @@
 
                 const now = performance.now();
 
-                // Sets the the first paint (FP) delay
+                // Sets the the first DOM update (FDU) delay
                 if (!this.hasMutated[eventType]) {
                     this.hasMutated[eventType] = true;
-                    const firstPaintDuration = now - startTime;
-                    this.statisticsOverlayUI.updateStats(eventType, "firstPaint", firstPaintDuration);
+                    const firstDomUpdateDuration = now - startTime;
+                    this.statisticsOverlayUI.updateStats(eventType, "firstDomUpdate", firstDomUpdateDuration);
                 }
 
                 // Stores the last mutation time
                 this.lastMutationTimes[eventType] = now;
 
-                if (this.settings.showLastContentPaint) {
-                    // If the user is tracking last content paint, sets a timeout to wait for a period
+                if (this.settings.showLastDomUpdate) {
+                    // If the user is tracking last DOM update, sets a timeout to wait for a period
                     // of inactivity before marking the last mutation before this inactivity as the
-                    // last content paint.
+                    // last DOM update.
 
                     clearTimeout(this.timeouts[eventType]);
                     this.timeouts[eventType] = setTimeout(() => {
-                        const lastContentPaintDuration = this.lastMutationTimes[eventType] - startTime;
-                        this.statisticsOverlayUI.updateStats(eventType, "lastContentPaint", lastContentPaintDuration);
+                        const lastDomUpdateDuration = this.lastMutationTimes[eventType] - startTime;
+                        this.statisticsOverlayUI.updateStats(eventType, "lastDomUpdate", lastDomUpdateDuration);
 
                         observer.disconnect();
                         delete this.observers[eventType];
-                    }, this.settings.timeAfterLastContentPaint);
+                    }, this.settings.timeAfterLastDomUpdate);
                 } else {
-                    // If the user is not tracking last content paint, disconnects the observer
+                    // If the user is not tracking last DOM update, disconnects the observer
                     // after the first mutation is detected.
                     observer.disconnect();
                     delete this.observers[eventType];
@@ -524,27 +524,27 @@
 
             // Timeout handlers for no-mutation cases
             if (this.settings.enableMutationTimeout) {
-                this.timeouts[`${eventType}_fp`] = setTimeout(() => {
+                this.timeouts[`${eventType}_fdu`] = setTimeout(() => {
                     if (!this.hasMutated[eventType]) {
-                        this.statisticsOverlayUI.setTimeoutState(eventType, "firstPaint", true);
-                        this.statisticsOverlayUI.stats[eventType].firstPaint = null;
+                        this.statisticsOverlayUI.setTimeoutState(eventType, "firstDomUpdate", true);
+                        this.statisticsOverlayUI.stats[eventType].firstDomUpdate = null;
                     }
                     // Conditionally disconnect the observer (so that the timeout time set to)
-                    if (!this.settings.showLastContentPaint) {
+                    if (!this.settings.showLastDomUpdate) {
                         observer.disconnect();
                         delete this.observers[eventType];
                     }
                 }, this.settings.mutationTimeoutValue);
             }
-            if (this.settings.showLastContentPaint) {
-                this.timeouts[`${eventType}_lcp`] = setTimeout(() => {
+            if (this.settings.showLastDomUpdate) {
+                this.timeouts[`${eventType}_ldu`] = setTimeout(() => {
                     if (!this.hasMutated[eventType]) {
-                        this.statisticsOverlayUI.setTimeoutState(eventType, "lastContentPaint", true);
-                        this.statisticsOverlayUI.stats[eventType].lastContentPaint = null;
+                        this.statisticsOverlayUI.setTimeoutState(eventType, "lastDomUpdate", true);
+                        this.statisticsOverlayUI.stats[eventType].lastDomUpdate = null;
                     }
                     observer.disconnect();
                     delete this.observers[eventType];
-                }, this.settings.timeAfterLastContentPaint);
+                }, this.settings.timeAfterLastDomUpdate);
             }
         }
 
@@ -607,12 +607,12 @@
         }
     }
 
-    if (window._domPaintTrackerActive) {
-        // console.log("DOMPaintTracker already initialized, not loading again");
+    if (window._domUpdateTrackerActive) {
+        // console.log("DOMUpdateTracker already initialized, not loading again");
     } else {
-        window._domPaintTrackerActive = true; // Global flag to prevent multiple instances
+        window._domUpdateTrackerActive = true; // Global flag to prevent multiple instances
 
-        const tracker = new DOMPaintTracker();
+        const tracker = new DOMUpdateTracker();
 
         chrome.runtime.sendMessage({ action: "getState" }, (response) => {
             if (response && response.isActive) {

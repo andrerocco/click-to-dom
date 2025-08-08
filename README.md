@@ -1,6 +1,6 @@
 # Click to DOM: mouse interaction to DOM update delay calculator
 
-Click to DOM is a Chrome Extension that measures the time it takes for the DOM to update (First Paint, Last Content Paint) after pointer events (e.g., mouse clicks, taps).
+Click to DOM is a Chrome Extension that measures the time it takes for the DOM to update (First DOM Update, Last DOM Update) after pointer events (e.g., mouse clicks, taps).
 
 Download (Chrome Web Store): _link soon._
 

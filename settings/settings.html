@@ -371,16 +371,16 @@
             <div class="settings-option">
                 <div>
                     <h3>
-                        Show "Last Content Paint" (LCP) delay
+                        Show "Last DOM Update" (LDU) delay
                     </h3>
                     <p class="description">By default, the extension only shows the delay from the mouse actions to the
-                        First Paint (FP). Enabling this option will also show the delay until the Last Content Paint
-                        (LCP). For that to work, you will also need to set a timeout value.</p>
+                        First DOM Update (FDU). Enabling this option will also show the delay until the Last DOM Update
+                        (LDU). For that to work, you will also need to set a timeout value.</p>
                 </div>
                 <div>
 
                     <label class="switch">
-                        <input type="checkbox" id="showLastContentPaint">
+                        <input type="checkbox" id="showLastDomUpdate">
                         <span class="slider"></span>
                     </label>
                 </div>
@@ -388,15 +388,15 @@
 
             <div class="settings-option">
                 <div>
-                    <h3>"Last Content Paint" timeout (ms)</h3>
-                    <p class="description">This is the threshold value that will be used to determine the last content
-                        paint. Meaning that, after a mutation, if no more mutations are detected after this time, the
-                        extension will consider that the last content paint has been reached. <i>Try to keep your mouse
+                    <h3>"Last DOM Update" timeout (ms)</h3>
+                    <p class="description">This is the threshold value that will be used to determine the last DOM
+                        update. Meaning that, after a mutation, if no more mutations are detected after this time, the
+                        extension will consider that the last DOM update has been reached. <i>Try to keep your mouse
                             (and keyboard) still during this time to not trigger unrelated DOM updates.</i></p>
                     </p>
                 </div>
                 <div>
-                    <input type="number" id="timeAfterLastContentPaint" class="input-field" min="0" step="10"
+                    <input type="number" id="timeAfterLastDomUpdate" class="input-field" min="0" step="10"
                         value="3000">
                 </div>
             </div>
