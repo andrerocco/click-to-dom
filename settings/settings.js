@@ -1,8 +1,8 @@
 document.addEventListener("DOMContentLoaded", () => {
     // Get all elements
     const fpsComparisonValueInput = document.getElementById("fpsComparisonValue");
-    const showLastContentPaintToggle = document.getElementById("showLastContentPaint");
-    const timeAfterLastContentPaintInput = document.getElementById("timeAfterLastContentPaint");
+    const showLastDomUpdateToggle = document.getElementById("showLastDomUpdate");
+    const timeAfterLastDomUpdateInput = document.getElementById("timeAfterLastDomUpdate");
 
     // Replace the single save button with two separate buttons
     const saveBehaviorButton = document.getElementById("saveBehaviorButton");
@@ -39,8 +39,8 @@ document.addEventListener("DOMContentLoaded", () => {
     chrome.storage.sync.get(
         [
             "fpsComparisonValue",
-            "showLastContentPaint",
-            "timeAfterLastContentPaint",
+            "showLastDomUpdate",
+            "timeAfterLastDomUpdate",
             "pointerDownColor",
             "pointerUpColor",
             "enableMutationTimeout",
@@ -52,8 +52,8 @@ document.addEventListener("DOMContentLoaded", () => {
         (result) => {
             // Set default values if settings don't exist yet
             fpsComparisonValueInput.value = result.fpsComparisonValue || 60;
-            showLastContentPaintToggle.checked = result.showLastContentPaint || false;
-            timeAfterLastContentPaintInput.value = result.timeAfterLastContentPaint || 3000;
+            showLastDomUpdateToggle.checked = result.showLastDomUpdate || false;
+            timeAfterLastDomUpdateInput.value = result.timeAfterLastDomUpdate || 3000;
 
             // Set color pickers to stored values or defaults
             pointerDownColorInput.value = result.pointerDownColor || DEFAULT_POINTER_DOWN_COLOR;
@@ -69,14 +69,14 @@ document.addEventListener("DOMContentLoaded", () => {
             mutationTimeoutValueInput.value = result.mutationTimeoutValue || 2500;
 
             // Update the disabled state of the time input based on toggle
-            timeAfterLastContentPaintInput.disabled = !showLastContentPaintToggle.checked;
+            timeAfterLastDomUpdateInput.disabled = !showLastDomUpdateToggle.checked;
             mutationTimeoutValueInput.disabled = !enableMutationTimeoutToggle.checked;
         }
     );
 
-    // Add a listener for the showLastContentPaint toggle to enable/disable the time input
-    showLastContentPaintToggle.addEventListener("change", () => {
-        timeAfterLastContentPaintInput.disabled = !showLastContentPaintToggle.checked;
+    // Add a listener for the showLastDomUpdate toggle to enable/disable the time input
+    showLastDomUpdateToggle.addEventListener("change", () => {
+        timeAfterLastDomUpdateInput.disabled = !showLastDomUpdateToggle.checked;
     });
 
     // Add a listener for the enableMutationTimeout toggle
@@ -117,14 +117,14 @@ document.addEventListener("DOMContentLoaded", () => {
     // Save behavior settings when behavior save button is clicked
     saveBehaviorButton.addEventListener("click", () => {
         // Get behavior values from form
-        const showLastContentPaint = showLastContentPaintToggle.checked;
-        const timeAfterLastContentPaint = parseInt(timeAfterLastContentPaintInput.value, 10);
+        const showLastDomUpdate = showLastDomUpdateToggle.checked;
+        const timeAfterLastDomUpdate = parseInt(timeAfterLastDomUpdateInput.value, 10);
         const enableMutationTimeout = enableMutationTimeoutToggle.checked;
         const mutationTimeoutValue = parseInt(mutationTimeoutValueInput.value, 10);
 
         // Validate inputs
-        if (isNaN(timeAfterLastContentPaint) || timeAfterLastContentPaint < 0) {
-            alert("Time After Last Content Paint must be a positive number");
+        if (isNaN(timeAfterLastDomUpdate) || timeAfterLastDomUpdate < 0) {
+            alert("Time After Last DOM Update must be a positive number");
             return;
         }
 
@@ -136,8 +136,8 @@ document.addEventListener("DOMContentLoaded", () => {
         // Save behavior settings to chrome.storage.sync
         chrome.storage.sync.set(
             {
-                showLastContentPaint,
-                timeAfterLastContentPaint,
+                showLastDomUpdate,
+                timeAfterLastDomUpdate,
                 enableMutationTimeout,
                 mutationTimeoutValue,
             },

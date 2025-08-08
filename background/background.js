@@ -3,7 +3,7 @@
 
 // When the extension is installed or updated
 chrome.runtime.onInstalled.addListener(() => {
-    console.log("Extension installed or updated");
+    // console.log("Extension installed or updated");
 
     // Create context menu item for settings
     chrome.contextMenus.create({
@@ -29,13 +29,14 @@ function isExtensionPage(url) {
 chrome.action.onClicked.addListener((tab) => {
     // Skip if this is an extension page (settings, etc.)
     if (isExtensionPage(tab.url)) {
-        console.log("Clicked on extension page, not activating content script");
+        // console.log("Clicked on extension page, not activating content script");
         return;
     }
 
     const key = "isActive_" + tab.id;
     chrome.storage.local.get([key], (result) => {
-        const currentState = result[key] || false;
+        // ON by default after user has enabled the extension on the current tab
+        const currentState = result[key] !== undefined ? result[key] : true;
         const newState = !currentState;
 
         // Update storage with new state for this tab
@@ -69,7 +70,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         const tabId = sender.tab.id;
         const key = "isActive_" + tabId;
         chrome.storage.local.get([key], (result) => {
-            const isActive = result[key] || false;
+            const isActive = result[key] !== undefined ? result[key] : true; // Default to true
             sendResponse({ isActive: isActive });
             // Ensure badge is consistent
             updateIcon(tabId, isActive);
